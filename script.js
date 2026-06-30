@@ -82,7 +82,6 @@ const starterData = {
   plates: [
     {
       text: "KIZZY",
-      vehicle: "Example Sultan RS",
       style: "san-andreas",
       notes: "Example custom plate. Replace or delete this."
     }
@@ -534,7 +533,6 @@ function renderPlates() {
           </div>
           <div class="plate-card-content">
             <h3>${escapeHtml(formatPlateText(plate.text))}</h3>
-            <p><span>Vehicle:</span> ${escapeHtml(plate.vehicle || "Unassigned")}</p>
             <p>${escapeHtml(plate.notes)}</p>
             <button class="danger-button" type="button" data-delete-plate="${plateIndex}">Delete</button>
           </div>
@@ -659,7 +657,6 @@ document.querySelectorAll(".dialog-form").forEach((form) => {
       data.plates = data.plates || [];
       data.plates.push({
         text: formatPlateText(formData.text),
-        vehicle: formData.vehicle,
         style: formData.style,
         notes: formData.notes
       });
