@@ -165,41 +165,47 @@ function setupCharacterMaker() {
   populateSelect(document.querySelector("#fatherSelect"), fathers);
 
   const featurePads = document.querySelector("#featurePads");
-  featurePads.innerHTML = featurePairs
-    .map((pair) => {
-      return `
-        <div class="feature-pad-card">
-          <div class="pad-card-header">
-            <strong>${escapeHtml(pair.title)}</strong>
-            <span>${escapeHtml(pair.x)} / ${escapeHtml(pair.y)}</span>
+  if (!featurePads) {
+    return;
+  }
+
+  if (!featurePads.querySelector(".feature-pad")) {
+    featurePads.innerHTML = featurePairs
+      .map((pair) => {
+        return `
+          <div class="feature-pad-card">
+            <div class="pad-card-header">
+              <strong>${escapeHtml(pair.title)}</strong>
+              <span>${escapeHtml(pair.x)} / ${escapeHtml(pair.y)}</span>
+            </div>
+            <div
+              class="feature-pad"
+              role="slider"
+              tabindex="0"
+              aria-label="${escapeHtml(pair.title)}"
+              aria-valuetext="${escapeHtml(pair.x)} 0, ${escapeHtml(pair.y)} 0"
+              data-x-feature="${escapeHtml(pair.x)}"
+              data-y-feature="${escapeHtml(pair.y)}"
+              data-x-value="0"
+              data-y-value="0"
+            >
+              <span class="axis-label axis-top">${escapeHtml(pair.top)}</span>
+              <span class="axis-label axis-right">${escapeHtml(pair.right)}</span>
+              <span class="axis-label axis-bottom">${escapeHtml(pair.bottom)}</span>
+              <span class="axis-label axis-left">${escapeHtml(pair.left)}</span>
+              <span class="pad-cross horizontal"></span>
+              <span class="pad-cross vertical"></span>
+              <span class="pad-dot"></span>
+            </div>
+            <div class="pad-values">
+              <span>${escapeHtml(pair.x)}: <output data-pad-x>0</output></span>
+              <span>${escapeHtml(pair.y)}: <output data-pad-y>0</output></span>
+            </div>
           </div>
-          <div
-            class="feature-pad"
-            role="slider"
-            tabindex="0"
-            aria-label="${escapeHtml(pair.title)}"
-            aria-valuetext="${escapeHtml(pair.x)} 0, ${escapeHtml(pair.y)} 0"
-            data-x-feature="${escapeHtml(pair.x)}"
-            data-y-feature="${escapeHtml(pair.y)}"
-            data-x-value="0"
-            data-y-value="0"
-          >
-            <span class="axis-label axis-top">${escapeHtml(pair.top)}</span>
-            <span class="axis-label axis-right">${escapeHtml(pair.right)}</span>
-            <span class="axis-label axis-bottom">${escapeHtml(pair.bottom)}</span>
-            <span class="axis-label axis-left">${escapeHtml(pair.left)}</span>
-            <span class="pad-cross horizontal"></span>
-            <span class="pad-cross vertical"></span>
-            <span class="pad-dot"></span>
-          </div>
-          <div class="pad-values">
-            <span>${escapeHtml(pair.x)}: <output data-pad-x>0</output></span>
-            <span>${escapeHtml(pair.y)}: <output data-pad-y>0</output></span>
-          </div>
-        </div>
-      `;
-    })
-    .join("");
+        `;
+      })
+      .join("");
+  }
 
   document.querySelectorAll(".feature-pad").forEach((pad) => {
     const startDrag = (event) => {

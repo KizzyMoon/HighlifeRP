@@ -69,7 +69,78 @@
 
           <fieldset class="form-card large-card">
             <legend>Face Features</legend>
-            <div id="featurePads" class="pad-grid"></div>
+            <div id="featurePads" class="pad-grid">
+              <div class="feature-pad-card">
+                <div class="pad-card-header"><strong>Nose Size</strong><span>Nose width / Nose peak height</span></div>
+                <div class="feature-pad" role="slider" tabindex="0" aria-label="Nose Size" data-x-feature="Nose width" data-y-feature="Nose peak height" data-x-value="0" data-y-value="0">
+                  <span class="axis-label axis-top">High</span><span class="axis-label axis-right">Wide</span><span class="axis-label axis-bottom">Low</span><span class="axis-label axis-left">Narrow</span><span class="pad-cross horizontal"></span><span class="pad-cross vertical"></span><span class="pad-dot"></span>
+                </div>
+                <div class="pad-values"><span>Nose width: <output data-pad-x>0</output></span><span>Nose peak height: <output data-pad-y>0</output></span></div>
+              </div>
+              <div class="feature-pad-card">
+                <div class="pad-card-header"><strong>Nose Profile</strong><span>Nose peak length / Nose bone height</span></div>
+                <div class="feature-pad" role="slider" tabindex="0" aria-label="Nose Profile" data-x-feature="Nose peak length" data-y-feature="Nose bone height" data-x-value="0" data-y-value="0">
+                  <span class="axis-label axis-top">Raised</span><span class="axis-label axis-right">Long</span><span class="axis-label axis-bottom">Lowered</span><span class="axis-label axis-left">Short</span><span class="pad-cross horizontal"></span><span class="pad-cross vertical"></span><span class="pad-dot"></span>
+                </div>
+                <div class="pad-values"><span>Nose peak length: <output data-pad-x>0</output></span><span>Nose bone height: <output data-pad-y>0</output></span></div>
+              </div>
+              <div class="feature-pad-card">
+                <div class="pad-card-header"><strong>Nose Tip</strong><span>Nose peak lowering / Nose bone twist</span></div>
+                <div class="feature-pad" role="slider" tabindex="0" aria-label="Nose Tip" data-x-feature="Nose peak lowering" data-y-feature="Nose bone twist" data-x-value="0" data-y-value="0">
+                  <span class="axis-label axis-top">Twist left</span><span class="axis-label axis-right">Downturned</span><span class="axis-label axis-bottom">Twist right</span><span class="axis-label axis-left">Upturned</span><span class="pad-cross horizontal"></span><span class="pad-cross vertical"></span><span class="pad-dot"></span>
+                </div>
+                <div class="pad-values"><span>Nose peak lowering: <output data-pad-x>0</output></span><span>Nose bone twist: <output data-pad-y>0</output></span></div>
+              </div>
+              <div class="feature-pad-card">
+                <div class="pad-card-header"><strong>Brow</strong><span>Eyebrow height / Eyebrow depth</span></div>
+                <div class="feature-pad" role="slider" tabindex="0" aria-label="Brow" data-x-feature="Eyebrow height" data-y-feature="Eyebrow depth" data-x-value="0" data-y-value="0">
+                  <span class="axis-label axis-top">Inward</span><span class="axis-label axis-right">Higher</span><span class="axis-label axis-bottom">Outward</span><span class="axis-label axis-left">Lower</span><span class="pad-cross horizontal"></span><span class="pad-cross vertical"></span><span class="pad-dot"></span>
+                </div>
+                <div class="pad-values"><span>Eyebrow height: <output data-pad-x>0</output></span><span>Eyebrow depth: <output data-pad-y>0</output></span></div>
+              </div>
+              <div class="feature-pad-card">
+                <div class="pad-card-header"><strong>Cheekbones</strong><span>Cheekbone height / Cheekbone width</span></div>
+                <div class="feature-pad" role="slider" tabindex="0" aria-label="Cheekbones" data-x-feature="Cheekbone height" data-y-feature="Cheekbone width" data-x-value="0" data-y-value="0">
+                  <span class="axis-label axis-top">Narrow</span><span class="axis-label axis-right">High</span><span class="axis-label axis-bottom">Wide</span><span class="axis-label axis-left">Low</span><span class="pad-cross horizontal"></span><span class="pad-cross vertical"></span><span class="pad-dot"></span>
+                </div>
+                <div class="pad-values"><span>Cheekbone height: <output data-pad-x>0</output></span><span>Cheekbone width: <output data-pad-y>0</output></span></div>
+              </div>
+              <div class="feature-pad-card">
+                <div class="pad-card-header"><strong>Cheeks and Eyes</strong><span>Cheek depth / Eye size</span></div>
+                <div class="feature-pad" role="slider" tabindex="0" aria-label="Cheeks and Eyes" data-x-feature="Cheek depth" data-y-feature="Eye size" data-x-value="0" data-y-value="0">
+                  <span class="axis-label axis-top">Small eyes</span><span class="axis-label axis-right">Full</span><span class="axis-label axis-bottom">Large eyes</span><span class="axis-label axis-left">Sunken</span><span class="pad-cross horizontal"></span><span class="pad-cross vertical"></span><span class="pad-dot"></span>
+                </div>
+                <div class="pad-values"><span>Cheek depth: <output data-pad-x>0</output></span><span>Eye size: <output data-pad-y>0</output></span></div>
+              </div>
+              <div class="feature-pad-card">
+                <div class="pad-card-header"><strong>Lips and Jaw</strong><span>Lip thickness / Jaw width</span></div>
+                <div class="feature-pad" role="slider" tabindex="0" aria-label="Lips and Jaw" data-x-feature="Lip thickness" data-y-feature="Jaw width" data-x-value="0" data-y-value="0">
+                  <span class="axis-label axis-top">Narrow jaw</span><span class="axis-label axis-right">Full lips</span><span class="axis-label axis-bottom">Wide jaw</span><span class="axis-label axis-left">Thin lips</span><span class="pad-cross horizontal"></span><span class="pad-cross vertical"></span><span class="pad-dot"></span>
+                </div>
+                <div class="pad-values"><span>Lip thickness: <output data-pad-x>0</output></span><span>Jaw width: <output data-pad-y>0</output></span></div>
+              </div>
+              <div class="feature-pad-card">
+                <div class="pad-card-header"><strong>Jaw Shape</strong><span>Jaw shape / Chin height</span></div>
+                <div class="feature-pad" role="slider" tabindex="0" aria-label="Jaw Shape" data-x-feature="Jaw shape" data-y-feature="Chin height" data-x-value="0" data-y-value="0">
+                  <span class="axis-label axis-top">High chin</span><span class="axis-label axis-right">Square</span><span class="axis-label axis-bottom">Low chin</span><span class="axis-label axis-left">Round</span><span class="pad-cross horizontal"></span><span class="pad-cross vertical"></span><span class="pad-dot"></span>
+                </div>
+                <div class="pad-values"><span>Jaw shape: <output data-pad-x>0</output></span><span>Chin height: <output data-pad-y>0</output></span></div>
+              </div>
+              <div class="feature-pad-card">
+                <div class="pad-card-header"><strong>Chin Profile</strong><span>Chin depth / Chin width</span></div>
+                <div class="feature-pad" role="slider" tabindex="0" aria-label="Chin Profile" data-x-feature="Chin depth" data-y-feature="Chin width" data-x-value="0" data-y-value="0">
+                  <span class="axis-label axis-top">Narrow</span><span class="axis-label axis-right">Outward</span><span class="axis-label axis-bottom">Wide</span><span class="axis-label axis-left">Inward</span><span class="pad-cross horizontal"></span><span class="pad-cross vertical"></span><span class="pad-dot"></span>
+                </div>
+                <div class="pad-values"><span>Chin depth: <output data-pad-x>0</output></span><span>Chin width: <output data-pad-y>0</output></span></div>
+              </div>
+              <div class="feature-pad-card">
+                <div class="pad-card-header"><strong>Chin and Neck</strong><span>Chin indent / Neck width</span></div>
+                <div class="feature-pad" role="slider" tabindex="0" aria-label="Chin and Neck" data-x-feature="Chin indent" data-y-feature="Neck width" data-x-value="0" data-y-value="0">
+                  <span class="axis-label axis-top">Narrow neck</span><span class="axis-label axis-right">Indented</span><span class="axis-label axis-bottom">Wide neck</span><span class="axis-label axis-left">Smooth</span><span class="pad-cross horizontal"></span><span class="pad-cross vertical"></span><span class="pad-dot"></span>
+                </div>
+                <div class="pad-values"><span>Chin indent: <output data-pad-x>0</output></span><span>Neck width: <output data-pad-y>0</output></span></div>
+              </div>
+            </div>
           </fieldset>
 
           <fieldset class="form-card">
