@@ -27,8 +27,8 @@ body {
   min-height: 100vh;
   margin: 0;
   background:
-    linear-gradient(110deg, rgba(8, 10, 14, 0.76), rgba(8, 10, 14, 0.54)),
-    url("background-los-santos.svg");
+    linear-gradient(110deg, rgba(8, 10, 14, 0.5), rgba(8, 10, 14, 0.22)),
+    url("background-los-santos.svg?v=2");
   background-attachment: fixed;
   background-position: center;
   background-size: cover;
