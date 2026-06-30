@@ -707,8 +707,9 @@ output {
 
 .character-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(170px, 220px));
   gap: 18px;
+  align-items: start;
 }
 
 .character-tile {
@@ -719,6 +720,7 @@ output {
 
 .portrait-button {
   width: 100%;
+  max-width: 220px;
   padding: 0;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -736,6 +738,7 @@ output {
   display: block;
   width: 100%;
   aspect-ratio: 4 / 5;
+  max-height: 270px;
 }
 
 .character-photo {
