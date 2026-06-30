@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Highlife Database</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <nav class="nav" aria-label="Main navigation">
+        <a href="#characters">Characters</a>
+        <a href="#paint">Paint Codes</a>
+        <a href="#cars">Cars</a>
+        <a href="#notes">Notes</a>
+      </nav>
+      <section class="hero" aria-labelledby="page-title">
+        <div>
+          <p class="kicker">FiveM server reference</p>
+          <h1 id="page-title">Highlife Database</h1>
+          <p>
+            A personal hub for character builds, paint colours, car prices,
+            stores, categories, and any other Highlife details worth keeping.
+          </p>
+        </div>
+        <div class="hero-panel" aria-label="Quick database counts">
+          <span>
+            <strong id="characterCount">0</strong>
+            Characters
+          </span>
+          <span>
+            <strong id="paintCount">0</strong>
+            Paint codes
+          </span>
+          <span>
+            <strong id="carCount">0</strong>
+            Cars
+          </span>
+        </div>
+      </section>
+    </header>
+
+    <main>
+      <section id="characters" class="section">
+        <div class="section-heading">
+          <div>
+            <p class="kicker">GTA V customisation</p>
+            <h2>Characters</h2>
+          </div>
+          <button class="primary-button" data-open-dialog="characterDialog">Add character</button>
+        </div>
+        <div id="characterGrid" class="card-grid"></div>
+      </section>
+
+      <section id="paint" class="section section-alt">
+        <div class="section-heading">
+          <div>
+            <p class="kicker">RGB and visual swatches</p>
+            <h2>Paint Codes</h2>
+          </div>
+          <button class="primary-button" data-open-dialog="paintDialog">Add paint</button>
+        </div>
+        <div id="paintGrid" class="paint-grid"></div>
+      </section>
+
+      <section id="cars" class="section">
+        <div class="section-heading">
+          <div>
+            <p class="kicker">Prices, stores, and categories</p>
+            <h2>Cars</h2>
+          </div>
+          <button class="primary-button" data-open-dialog="carDialog">Add car</button>
+        </div>
+        <div class="table-tools">
+          <label>
+            Search
+            <input id="carSearch" type="search" placeholder="Name, store, category..." />
+          </label>
+          <label>
+            Category
+            <select id="categoryFilter">
+              <option value="all">All categories</option>
+            </select>
+          </label>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Car</th>
+                <th>Price</th>
+                <th>Store</th>
+                <th>Category</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody id="carTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="notes" class="section section-alt">
+        <div class="section-heading">
+          <div>
+            <p class="kicker">Extra space</p>
+            <h2>Notes</h2>
+          </div>
+        </div>
+        <textarea id="notesBox" rows="8" aria-label="Highlife notes"></textarea>
+      </section>
+    </main>
+
+    <dialog id="characterDialog">
+      <form method="dialog" class="dialog-form" data-form="characters">
+        <h3>Add Character</h3>
+        <label>Name<input name="name" required /></label>
+        <label>Role / vibe<input name="role" placeholder="Mechanic, crim, civilian..." /></label>
+        <label>Hair colour<input name="hair" /></label>
+        <label>Eye colour<input name="eyes" /></label>
+        <label>GTA V creation notes<textarea name="creation" rows="4"></textarea></label>
+        <div class="dialog-actions">
+          <button value="cancel">Cancel</button>
+          <button class="primary-button" value="default">Save</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="paintDialog">
+      <form method="dialog" class="dialog-form" data-form="paints">
+        <h3>Add Paint Code</h3>
+        <label>Name<input name="name" required /></label>
+        <label>Red<input name="r" type="number" min="0" max="255" required /></label>
+        <label>Green<input name="g" type="number" min="0" max="255" required /></label>
+        <label>Blue<input name="b" type="number" min="0" max="255" required /></label>
+        <label>Finish / notes<input name="notes" placeholder="Metallic, pearlescent, crew colour..." /></label>
+        <div class="dialog-actions">
+          <button value="cancel">Cancel</button>
+          <button class="primary-button" value="default">Save</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="carDialog">
+      <form method="dialog" class="dialog-form" data-form="cars">
+        <h3>Add Car</h3>
+        <label>Name<input name="name" required /></label>
+        <label>Price<input name="price" placeholder="$125,000" /></label>
+        <label>Store<input name="store" placeholder="PDM, Luxury Autos..." /></label>
+        <label>Category<input name="category" placeholder="Sports, Sedan, Motorbike..." /></label>
+        <label>Notes<textarea name="notes" rows="3"></textarea></label>
+        <div class="dialog-actions">
+          <button value="cancel">Cancel</button>
+          <button class="primary-button" value="default">Save</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="script.js"></script>
+  </body>
+</html>
