@@ -75,8 +75,8 @@ button {
   width: 42px;
   height: 42px;
   border-radius: 8px;
-  background: linear-gradient(135deg, var(--accent), var(--gold));
-  color: #111;
+  background: linear-gradient(135deg, #1f8cff, #45c7ff 56%, #8be7ff);
+  color: #06111d;
   font-weight: 900;
 }
 
