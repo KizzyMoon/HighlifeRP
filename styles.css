@@ -614,7 +614,6 @@ output {
   position: relative;
   width: min(178px, 100%);
   aspect-ratio: 1;
-  justify-self: center;
   border: 2px solid rgba(210, 220, 222, 0.34);
   border-radius: 0;
   background:
@@ -624,7 +623,8 @@ output {
   background-size: 20% 20%, 20% 20%, auto;
   touch-action: none;
   user-select: none;
-  margin: 24px 44px 22px;
+  grid-area: pad;
+  justify-self: center;
 }
 
 .feature-pad:focus {
@@ -667,7 +667,7 @@ output {
 }
 
 .axis-label {
-  position: absolute;
+  position: static;
   color: #e7eef0;
   font-size: 0.78rem;
   font-weight: 700;
@@ -677,27 +677,27 @@ output {
 }
 
 .axis-top {
-  top: -24px;
-  left: 50%;
-  transform: translateX(-50%);
+  grid-area: top;
+  align-self: end;
+  justify-self: center;
 }
 
 .axis-right {
-  right: -38px;
-  top: 50%;
-  transform: translateY(-50%);
+  grid-area: right;
+  align-self: center;
+  justify-self: start;
 }
 
 .axis-bottom {
-  bottom: -24px;
-  left: 50%;
-  transform: translateX(-50%);
+  grid-area: bottom;
+  align-self: start;
+  justify-self: center;
 }
 
 .axis-left {
-  left: -28px;
-  top: 50%;
-  transform: translateY(-50%);
+  grid-area: left;
+  align-self: center;
+  justify-self: end;
 }
 
 .pad-values {
@@ -705,6 +705,20 @@ output {
   justify-content: space-between;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.pad-frame {
+  display: grid;
+  grid-template-areas:
+    ". top ."
+    "left pad right"
+    ". bottom .";
+  grid-template-columns: minmax(58px, 0.8fr) minmax(150px, 178px) minmax(58px, 0.8fr);
+  grid-template-rows: 24px auto 24px;
+  align-items: center;
+  justify-content: center;
+  column-gap: 8px;
+  width: 100%;
 }
 
 .maker-actions {
