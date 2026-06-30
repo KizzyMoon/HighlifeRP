@@ -891,7 +891,7 @@ output {
   display: grid;
   place-items: center;
   width: calc(100% - 24px);
-  max-width: 300px;
+  max-width: 360px;
   aspect-ratio: 2.25 / 1;
   margin: 16px auto 12px;
   border: 5px solid #d8dde0;
@@ -943,11 +943,15 @@ output {
   margin-top: 22px;
   color: inherit;
   font-family: Impact, "Arial Black", sans-serif;
-  font-size: clamp(2.2rem, 9vw, 4.2rem);
+  max-width: calc(100% - 24px);
+  overflow: hidden;
+  font-size: clamp(1.9rem, 7vw, 3.6rem);
   font-weight: 900;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.03em;
   line-height: 1;
+  text-align: center;
   text-shadow: 0 2px 0 rgba(255, 255, 255, 0.55);
+  white-space: nowrap;
 }
 
 .plate-blue {

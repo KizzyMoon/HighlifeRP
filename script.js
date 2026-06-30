@@ -665,7 +665,7 @@ function renderPlates() {
 }
 
 function formatPlateText(value) {
-  return String(value || "").toUpperCase().replace(/[^A-Z0-9 ]/g, "").slice(0, 8);
+  return String(value || "").toUpperCase().replace(/[^A-Z0-9 ]/g, "").slice(0, 9);
 }
 
 function renderAll() {
