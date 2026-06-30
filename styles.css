@@ -338,18 +338,18 @@ output {
 
 .pad-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 14px;
 }
 
 .feature-pad-card {
   min-width: 0;
   display: grid;
-  gap: 12px;
-  padding: 14px;
+  gap: 10px;
+  padding: 12px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.16);
+  border-radius: 4px;
+  background: rgba(2, 5, 7, 0.55);
 }
 
 .pad-card-header {
@@ -371,17 +371,19 @@ output {
   --dot-x: 50%;
   --dot-y: 50%;
   position: relative;
-  min-height: 190px;
-  border: 1px solid #60717d;
-  border-radius: 8px;
+  width: min(178px, 100%);
+  aspect-ratio: 1;
+  justify-self: center;
+  border: 2px solid rgba(210, 220, 222, 0.34);
+  border-radius: 0;
   background:
-    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    radial-gradient(circle at 50% 50%, rgba(102, 199, 255, 0.18), transparent 35%),
-    #10161b;
-  background-size: 25% 25%, 25% 25%, auto, auto;
+    linear-gradient(rgba(210, 220, 222, 0.28) 2px, transparent 2px),
+    linear-gradient(90deg, rgba(210, 220, 222, 0.28) 2px, transparent 2px),
+    rgba(20, 24, 25, 0.94);
+  background-size: 20% 20%, 20% 20%, auto;
   touch-action: none;
   user-select: none;
+  margin: 24px 44px 22px;
 }
 
 .feature-pad:focus {
@@ -391,7 +393,7 @@ output {
 
 .pad-cross {
   position: absolute;
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.38);
   pointer-events: none;
 }
 
@@ -413,45 +415,46 @@ output {
   position: absolute;
   left: var(--dot-x);
   top: var(--dot-y);
-  width: 18px;
-  height: 18px;
-  border: 3px solid #fff;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.9);
   border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 0 5px rgba(226, 85, 79, 0.2);
+  background: #e9f2f4;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.28);
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
 
 .axis-label {
   position: absolute;
-  color: #dbe7ed;
-  font-size: 0.74rem;
-  font-weight: 800;
+  color: #e7eef0;
+  font-size: 0.78rem;
+  font-weight: 700;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
   pointer-events: none;
+  white-space: nowrap;
 }
 
 .axis-top {
-  top: 8px;
+  top: -24px;
   left: 50%;
   transform: translateX(-50%);
 }
 
 .axis-right {
-  right: 8px;
+  right: -38px;
   top: 50%;
   transform: translateY(-50%);
 }
 
 .axis-bottom {
-  bottom: 8px;
+  bottom: -24px;
   left: 50%;
   transform: translateX(-50%);
 }
 
 .axis-left {
-  left: 8px;
+  left: -28px;
   top: 50%;
   transform: translateY(-50%);
 }
