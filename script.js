@@ -94,6 +94,7 @@ const carSearch = document.querySelector("#carSearch");
 const categoryFilter = document.querySelector("#categoryFilter");
 const notesBox = document.querySelector("#notesBox");
 const characterMakerForm = document.querySelector("#characterMakerForm");
+const saveCharacterStatus = document.querySelector("#saveCharacterStatus");
 
 function loadData() {
   const savedV2 = localStorage.getItem(storageKey);
@@ -139,14 +140,23 @@ function escapeHtml(value) {
 }
 
 function populateSelect(select, options) {
+  if (!select) {
+    return;
+  }
+
   select.innerHTML = options.map((option) => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join("");
 }
 
 function setupCharacterMaker() {
+  if (!characterMakerForm) {
+    return;
+  }
+
   populateSelect(document.querySelector("#motherSelect"), mothers);
   populateSelect(document.querySelector("#fatherSelect"), fathers);
 
-  document.querySelector("#featurePads").innerHTML = featurePairs
+  const featurePads = document.querySelector("#featurePads");
+  featurePads.innerHTML = featurePairs
     .map((pair) => {
       return `
         <div class="feature-pad-card">
@@ -250,12 +260,20 @@ function updatePadPosition(pad, xValue, yValue) {
 }
 
 function renderCounts() {
-  document.querySelector("#characterCount").textContent = data.characters.length;
-  document.querySelector("#paintCount").textContent = data.paints.length;
-  document.querySelector("#carCount").textContent = data.cars.length;
+  const characterCount = document.querySelector("#characterCount");
+  const paintCount = document.querySelector("#paintCount");
+  const carCount = document.querySelector("#carCount");
+
+  if (characterCount) characterCount.textContent = data.characters.length;
+  if (paintCount) paintCount.textContent = data.paints.length;
+  if (carCount) carCount.textContent = data.cars.length;
 }
 
 function renderCharacters() {
+  if (!characterGrid) {
+    return;
+  }
+
   characterGrid.innerHTML = data.characters
     .map((character, characterIndex) => {
       return `
@@ -412,6 +430,10 @@ function renderBlock(title, rows) {
 }
 
 function renderPaints() {
+  if (!paintGrid) {
+    return;
+  }
+
   paintGrid.innerHTML = data.paints
     .map((paint, paintIndex) => {
       const rgb = `rgb(${paint.r}, ${paint.g}, ${paint.b})`;
@@ -431,6 +453,10 @@ function renderPaints() {
 }
 
 function renderCategoryFilter() {
+  if (!categoryFilter) {
+    return;
+  }
+
   const selected = categoryFilter.value || "all";
   const categories = [...new Set(data.cars.map((car) => car.category).filter(Boolean))].sort();
   categoryFilter.innerHTML = '<option value="all">All categories</option>';
@@ -444,6 +470,10 @@ function renderCategoryFilter() {
 }
 
 function renderCars() {
+  if (!carTable || !carSearch || !categoryFilter) {
+    return;
+  }
+
   const search = carSearch.value.trim().toLowerCase();
   const category = categoryFilter.value;
   const cars = data.cars
@@ -481,49 +511,65 @@ function renderAll() {
   renderCars();
 }
 
-characterMakerForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const formData = new FormData(characterMakerForm);
-  const character = {};
-  const features = {};
+if (characterMakerForm) {
+  characterMakerForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const formData = new FormData(characterMakerForm);
+    const character = {};
+    const features = {};
 
-  formData.forEach((value, key) => {
-    character[key] = value;
+    formData.forEach((value, key) => {
+      character[key] = value;
+    });
+
+    document.querySelectorAll(".feature-pad").forEach((pad) => {
+      features[pad.dataset.xFeature] = pad.dataset.xValue;
+      features[pad.dataset.yFeature] = pad.dataset.yValue;
+    });
+
+    character.features = features;
+    data.characters.unshift(character);
+    saveData();
+    characterMakerForm.reset();
+    document.querySelectorAll(".feature-pad").forEach((pad) => updatePadPosition(pad, 0, 0));
+    renderAll();
+
+    if (saveCharacterStatus) {
+      saveCharacterStatus.textContent = `${character.name || "Character"} saved.`;
+    }
   });
+}
 
-  document.querySelectorAll(".feature-pad").forEach((pad) => {
-    features[pad.dataset.xFeature] = pad.dataset.xValue;
-    features[pad.dataset.yFeature] = pad.dataset.yValue;
+const resetCharacterForm = document.querySelector("#resetCharacterForm");
+if (resetCharacterForm && characterMakerForm) {
+  resetCharacterForm.addEventListener("click", () => {
+    characterMakerForm.reset();
+    document.querySelectorAll(".feature-pad").forEach((pad) => updatePadPosition(pad, 0, 0));
+    if (saveCharacterStatus) {
+      saveCharacterStatus.textContent = "";
+    }
   });
+}
 
-  character.features = features;
-  data.characters.unshift(character);
-  saveData();
-  characterMakerForm.reset();
-  document.querySelectorAll(".feature-pad").forEach((pad) => updatePadPosition(pad, 0, 0));
-  renderAll();
-  document.querySelector("#characters").scrollIntoView({ behavior: "smooth", block: "start" });
-});
+if (characterGrid && characterDetails && characterDetailsDialog) {
+  characterGrid.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-character-index]");
+    if (!button) {
+      return;
+    }
 
-document.querySelector("#resetCharacterForm").addEventListener("click", () => {
-  characterMakerForm.reset();
-  document.querySelectorAll(".feature-pad").forEach((pad) => updatePadPosition(pad, 0, 0));
-});
+    const character = data.characters[Number(button.dataset.characterIndex)];
+    characterDetails.innerHTML = renderCharacterDetails(character);
+    characterDetailsDialog.showModal();
+  });
+}
 
-characterGrid.addEventListener("click", (event) => {
-  const button = event.target.closest("[data-character-index]");
-  if (!button) {
-    return;
-  }
-
-  const character = data.characters[Number(button.dataset.characterIndex)];
-  characterDetails.innerHTML = renderCharacterDetails(character);
-  characterDetailsDialog.showModal();
-});
-
-document.querySelector("#closeCharacterDetails").addEventListener("click", () => {
-  characterDetailsDialog.close();
-});
+const closeCharacterDetails = document.querySelector("#closeCharacterDetails");
+if (closeCharacterDetails && characterDetailsDialog) {
+  closeCharacterDetails.addEventListener("click", () => {
+    characterDetailsDialog.close();
+  });
+}
 
 document.querySelectorAll("[data-open-dialog]").forEach((button) => {
   button.addEventListener("click", () => {
@@ -562,43 +608,49 @@ document.querySelectorAll(".dialog-form").forEach((form) => {
 });
 
 setupCharacterMaker();
-notesBox.value = data.notes;
-notesBox.addEventListener("input", () => {
-  data.notes = notesBox.value;
-  saveData();
-});
-
-carSearch.addEventListener("input", renderCars);
-categoryFilter.addEventListener("change", renderCars);
-
-paintGrid.addEventListener("click", (event) => {
-  const button = event.target.closest("[data-delete-paint]");
-  if (!button) {
-    return;
-  }
-
-  const index = Number(button.dataset.deletePaint);
-  const paint = data.paints[index];
-  if (window.confirm(`Delete paint code "${paint.name}"?`)) {
-    data.paints.splice(index, 1);
+if (notesBox) {
+  notesBox.value = data.notes;
+  notesBox.addEventListener("input", () => {
+    data.notes = notesBox.value;
     saveData();
-    renderAll();
-  }
-});
+  });
+}
 
-carTable.addEventListener("click", (event) => {
-  const button = event.target.closest("[data-delete-car]");
-  if (!button) {
-    return;
-  }
+if (carSearch) carSearch.addEventListener("input", renderCars);
+if (categoryFilter) categoryFilter.addEventListener("change", renderCars);
 
-  const index = Number(button.dataset.deleteCar);
-  const car = data.cars[index];
-  if (window.confirm(`Delete vehicle "${car.name}"?`)) {
-    data.cars.splice(index, 1);
-    saveData();
-    renderAll();
-  }
-});
+if (paintGrid) {
+  paintGrid.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-delete-paint]");
+    if (!button) {
+      return;
+    }
+
+    const index = Number(button.dataset.deletePaint);
+    const paint = data.paints[index];
+    if (window.confirm(`Delete paint code "${paint.name}"?`)) {
+      data.paints.splice(index, 1);
+      saveData();
+      renderAll();
+    }
+  });
+}
+
+if (carTable) {
+  carTable.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-delete-car]");
+    if (!button) {
+      return;
+    }
+
+    const index = Number(button.dataset.deleteCar);
+    const car = data.cars[index];
+    if (window.confirm(`Delete vehicle "${car.name}"?`)) {
+      data.cars.splice(index, 1);
+      saveData();
+      renderAll();
+    }
+  });
+}
 
 renderAll();

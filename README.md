@@ -5,6 +5,7 @@ A personal GitHub Pages vault for Highlife/FiveM reference notes.
 ## What it tracks
 
 - GTA V/FiveM character maker settings, including heritage, face feature sliders, hair, colours, overlays, clothing, and wipe recovery notes.
+- A separate character maker page for creating new saved builds.
 - Paint codes with RGB values and visual swatches.
 - Cars with prices, dealership/store, category, and notes.
 - General Highlife notes.

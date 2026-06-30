@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Character Maker | Highlife RP Vault</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <aside class="sidebar">
+      <a class="brand" href="index.html" aria-label="Highlife RP Vault home">
+        <span>HL</span>
+        <strong>Highlife RP Vault</strong>
+      </a>
+      <nav aria-label="Main navigation">
+        <a href="character-maker.html">Character Maker</a>
+        <a href="index.html#characters">Saved Builds</a>
+        <a href="index.html#paint">Paint Codes</a>
+        <a href="index.html#cars">Vehicle List</a>
+        <a href="index.html#notes">Notes</a>
+      </nav>
+    </aside>
+
+    <main id="top" class="app-shell">
+      <section class="hero compact-hero">
+        <div class="hero-copy">
+          <p class="eyebrow">GTA V style creator</p>
+          <h1>Character Maker</h1>
+          <p>
+            Save the exact settings you need to rebuild a Highlife character
+            after a wipe.
+          </p>
+        </div>
+      </section>
+
+      <section id="maker" class="panel feature-panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Creation settings</p>
+            <h2>New Character Build</h2>
+          </div>
+          <button id="resetCharacterForm" class="ghost-button" type="button">Reset form</button>
+        </div>
+
+        <form id="characterMakerForm" class="maker-grid">
+          <fieldset class="form-card">
+            <legend>Identity</legend>
+            <label>Character name<input name="name" required placeholder="Kizzy Moon" /></label>
+            <label>Role / storyline<input name="role" placeholder="Mechanic, crim, civilian, medic..." /></label>
+            <label>Gender / base model<input name="model" placeholder="mp_f_freemode_01 or mp_m_freemode_01" /></label>
+            <label>Voice / vibe<input name="voice" placeholder="Soft, sharp, chaotic, calm..." /></label>
+          </fieldset>
+
+          <fieldset class="form-card">
+            <legend>Heritage</legend>
+            <div class="two-col">
+              <label>Mother<select name="mother" id="motherSelect"></select></label>
+              <label>Father<select name="father" id="fatherSelect"></select></label>
+            </div>
+            <label>Resemblance mix <output data-output-for="resemblance">50</output>
+              <input name="resemblance" type="range" min="0" max="100" value="50" />
+            </label>
+            <label>Skin mix <output data-output-for="skinMix">50</output>
+              <input name="skinMix" type="range" min="0" max="100" value="50" />
+            </label>
+          </fieldset>
+
+          <fieldset class="form-card large-card">
+            <legend>Face Features</legend>
+            <div id="featurePads" class="pad-grid"></div>
+          </fieldset>
+
+          <fieldset class="form-card">
+            <legend>Hair and Colour</legend>
+            <div class="two-col">
+              <label>Hair style<input name="hairStyle" placeholder="Style ID / name" /></label>
+              <label>Hair colour<input name="hairColor" placeholder="Colour ID / name" /></label>
+              <label>Highlight colour<input name="highlightColor" placeholder="Colour ID / name" /></label>
+              <label>Eye colour<input name="eyeColor" placeholder="Colour ID / name" /></label>
+            </div>
+            <label>Eyebrows<input name="eyebrows" placeholder="Shape, colour, opacity" /></label>
+            <label>Facial hair<input name="facialHair" placeholder="Style, colour, opacity" /></label>
+          </fieldset>
+
+          <fieldset class="form-card">
+            <legend>Appearance Overlays</legend>
+            <label>Blemishes<input name="blemishes" placeholder="Style / opacity" /></label>
+            <label>Ageing<input name="ageing" placeholder="Style / opacity" /></label>
+            <label>Makeup<input name="makeup" placeholder="Style / colour / opacity" /></label>
+            <label>Blush / lipstick<input name="blushLipstick" placeholder="Style / colour / opacity" /></label>
+            <label>Moles / freckles<input name="freckles" placeholder="Style / opacity" /></label>
+          </fieldset>
+
+          <fieldset class="form-card">
+            <legend>Clothing and Spawn Notes</legend>
+            <label>Starter outfit<textarea name="outfit" rows="4" placeholder="Top, undershirt, pants, shoes, accessories..."></textarea></label>
+            <label>Creation notes<textarea name="creation" rows="5" placeholder="Anything you need to remake them after a wipe."></textarea></label>
+          </fieldset>
+
+          <div class="maker-actions">
+            <a class="ghost-link" href="index.html#characters">View saved builds</a>
+            <button class="primary-button" type="submit">Save character build</button>
+          </div>
+        </form>
+        <p id="saveCharacterStatus" class="save-status" aria-live="polite"></p>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
