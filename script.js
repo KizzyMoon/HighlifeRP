@@ -332,7 +332,7 @@ function renderBlock(title, rows) {
 
 function renderPaints() {
   paintGrid.innerHTML = data.paints
-    .map((paint) => {
+    .map((paint, paintIndex) => {
       const rgb = `rgb(${paint.r}, ${paint.g}, ${paint.b})`;
       return `
         <article class="paint-card">
@@ -341,6 +341,7 @@ function renderPaints() {
             <h3>${escapeHtml(paint.name)}</h3>
             <p class="rgb-code">${rgb}</p>
             <p>${escapeHtml(paint.notes)}</p>
+            <button class="danger-button" type="button" data-delete-paint="${paintIndex}">Delete</button>
           </div>
         </article>
       `;
@@ -364,7 +365,9 @@ function renderCategoryFilter() {
 function renderCars() {
   const search = carSearch.value.trim().toLowerCase();
   const category = categoryFilter.value;
-  const cars = data.cars.filter((car) => {
+  const cars = data.cars
+    .map((car, index) => ({ ...car, originalIndex: index }))
+    .filter((car) => {
     const searchable = `${car.name} ${car.price} ${car.store} ${car.category} ${car.notes}`.toLowerCase();
     const matchesSearch = !search || searchable.includes(search);
     const matchesCategory = category === "all" || car.category === category;
@@ -379,7 +382,10 @@ function renderCars() {
           <td>${escapeHtml(car.price)}</td>
           <td>${escapeHtml(car.store)}</td>
           <td>${escapeHtml(car.category)}</td>
-          <td>${escapeHtml(car.notes)}</td>
+          <td>
+            ${escapeHtml(car.notes)}
+            <button class="danger-button table-delete" type="button" data-delete-car="${car.originalIndex}">Delete</button>
+          </td>
         </tr>
       `
     )
@@ -468,5 +474,35 @@ notesBox.addEventListener("input", () => {
 
 carSearch.addEventListener("input", renderCars);
 categoryFilter.addEventListener("change", renderCars);
+
+paintGrid.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-delete-paint]");
+  if (!button) {
+    return;
+  }
+
+  const index = Number(button.dataset.deletePaint);
+  const paint = data.paints[index];
+  if (window.confirm(`Delete paint code "${paint.name}"?`)) {
+    data.paints.splice(index, 1);
+    saveData();
+    renderAll();
+  }
+});
+
+carTable.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-delete-car]");
+  if (!button) {
+    return;
+  }
+
+  const index = Number(button.dataset.deleteCar);
+  const car = data.cars[index];
+  if (window.confirm(`Delete vehicle "${car.name}"?`)) {
+    data.cars.splice(index, 1);
+    saveData();
+    renderAll();
+  }
+});
 
 renderAll();

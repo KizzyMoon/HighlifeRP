@@ -213,6 +213,26 @@ h2 {
   color: #1b1111;
 }
 
+.danger-button {
+  min-height: 34px;
+  border-radius: 8px;
+  padding: 7px 10px;
+  background: rgba(226, 85, 79, 0.14);
+  border: 1px solid rgba(226, 85, 79, 0.42);
+  color: #ffb4ad;
+  font-weight: 800;
+}
+
+.danger-button:hover {
+  background: rgba(226, 85, 79, 0.28);
+  color: #fff;
+}
+
+.table-delete {
+  display: block;
+  margin-top: 10px;
+}
+
 .ghost-button {
   border: 1px solid var(--line);
   background: transparent;
