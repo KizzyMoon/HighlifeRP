@@ -453,8 +453,13 @@ function renderCharacterDetails(character) {
         ${renderBlock("Overlays", {
           Blemishes: character.blemishes,
           Ageing: character.ageing,
+          Complexion: character.complexion,
+          "Skin damage": character.skinDamage,
           Makeup: character.makeup,
+          "Makeup colour": character.makeupColor,
+          "Makeup opacity": formatPercent(character.makeupOpacity),
           "Blush / lipstick": character.blushLipstick,
+          "Lipstick opacity": formatPercent(character.lipstickOpacity),
           Freckles: character.freckles
         })}
         ${renderBlock("Face Features", {
@@ -477,7 +482,7 @@ function renderCharacterPortrait(character) {
   const hair = colorFromText(character.hairColor || character.hairStyle, "#3b2418");
   const highlight = colorFromText(character.highlightColor, "#8b5a34");
   const eyes = colorFromText(character.eyeColor, "#5ea468");
-  const lip = colorFromText(character.blushLipstick || character.makeup, "#b75d68");
+  const lip = colorFromText(character.blushLipstick || character.makeupColor || character.makeup, "#b75d68");
   const feminine = String(character.model || "").includes("_f_");
   const hairPath = feminine
     ? "M78 86c2-34 23-54 50-54s48 20 50 54c-10-21-22-29-50-29S88 65 78 86z"
@@ -628,6 +633,10 @@ function renderCars() {
       `
     )
     .join("");
+}
+
+function formatPercent(value) {
+  return value === undefined || value === "" ? "-" : `${value}%`;
 }
 
 function renderPlates() {

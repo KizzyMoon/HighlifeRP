@@ -559,6 +559,30 @@ output {
   border: 2px solid #fff;
 }
 
+.overlay-controls {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.42);
+}
+
+.overlay-controls label {
+  margin: 0;
+  color: #eef4f6;
+  font-weight: 800;
+}
+
+.overlay-controls output {
+  color: #9ecbff;
+}
+
+.makeup-strip {
+  grid-template-columns: repeat(12, minmax(18px, 1fr));
+}
+
 .feature-pad-card {
   min-width: 0;
   display: grid;

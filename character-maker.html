@@ -209,11 +209,43 @@
 
             <fieldset class="form-card">
               <legend>Appearance Overlays</legend>
-              <label>Blemishes<input name="blemishes" placeholder="Style / opacity" /></label>
-              <label>Ageing<input name="ageing" placeholder="Style / opacity" /></label>
-              <label>Makeup<input name="makeup" placeholder="Style / colour / opacity" /></label>
-              <label>Blush / lipstick<input name="blushLipstick" placeholder="Style / colour / opacity" /></label>
-              <label>Moles / freckles<input name="freckles" placeholder="Style / opacity" /></label>
+              <div class="appearance-menu">
+                <label class="appearance-row"><span>Skin Blemishes</span><input name="blemishes" placeholder="None" /></label>
+                <label class="appearance-row"><span>Skin Aging</span><input name="ageing" placeholder="None" /></label>
+                <label class="appearance-row"><span>Skin Complexion</span><input name="complexion" placeholder="None" /></label>
+                <label class="appearance-row"><span>Moles & Freckles</span><input name="freckles" placeholder="None" /></label>
+                <label class="appearance-row"><span>Skin Damage</span><input name="skinDamage" placeholder="None" /></label>
+                <label class="appearance-row"><span>Eye Makeup</span><input name="makeup" placeholder="Cat Eyes, smokey, natural..." /></label>
+                <label class="appearance-row"><span>Lipstick</span><input name="blushLipstick" placeholder="Style / colour" /></label>
+              </div>
+
+              <div class="overlay-controls">
+                <label>Makeup Opacity <output data-output-for="makeupOpacity">100</output>
+                  <input name="makeupOpacity" type="range" min="0" max="100" value="100" />
+                </label>
+                <label>Lipstick Opacity <output data-output-for="lipstickOpacity">100</output>
+                  <input name="lipstickOpacity" type="range" min="0" max="100" value="100" />
+                </label>
+              </div>
+
+              <div class="colour-changer" aria-label="Makeup colour picker">
+                <div class="colour-title">Makeup Colour <output id="makeupColorLabel">Soft Pink</output></div>
+                <input id="makeupColorInput" name="makeupColor" type="hidden" value="Soft Pink" />
+                <div class="colour-strip makeup-strip" data-colour-target="makeupColor">
+                  <button type="button" class="colour-chip" data-colour-name="Black" style="--chip:#111111"></button>
+                  <button type="button" class="colour-chip" data-colour-name="Grey" style="--chip:#5d6268"></button>
+                  <button type="button" class="colour-chip" data-colour-name="Rose" style="--chip:#b96a77"></button>
+                  <button type="button" class="colour-chip selected" data-colour-name="Soft Pink" style="--chip:#e18a9b"></button>
+                  <button type="button" class="colour-chip" data-colour-name="Hot Pink" style="--chip:#d93c7a"></button>
+                  <button type="button" class="colour-chip" data-colour-name="Red" style="--chip:#b92232"></button>
+                  <button type="button" class="colour-chip" data-colour-name="Burgundy" style="--chip:#6f1e34"></button>
+                  <button type="button" class="colour-chip" data-colour-name="Purple" style="--chip:#74419a"></button>
+                  <button type="button" class="colour-chip" data-colour-name="Blue" style="--chip:#315ba8"></button>
+                  <button type="button" class="colour-chip" data-colour-name="Teal" style="--chip:#217f86"></button>
+                  <button type="button" class="colour-chip" data-colour-name="Gold" style="--chip:#c39a4a"></button>
+                  <button type="button" class="colour-chip" data-colour-name="White" style="--chip:#efebe3"></button>
+                </div>
+              </div>
             </fieldset>
 
             <fieldset class="form-card">
