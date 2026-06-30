@@ -650,7 +650,9 @@ function renderPlates() {
       return `
         <article class="plate-card">
           <div class="gta-plate plate-${escapeHtml(plate.style || "san-andreas")}">
+            <span class="plate-month">MAY</span>
             <span class="plate-state">San Andreas</span>
+            <span class="plate-sticker">8<br><small>6324478</small></span>
             <strong>${escapeHtml(formatPlateText(plate.text))}</strong>
           </div>
           <div class="plate-card-content">
