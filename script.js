@@ -103,6 +103,9 @@ const categoryFilter = document.querySelector("#categoryFilter");
 const notesBox = document.querySelector("#notesBox");
 const characterMakerForm = document.querySelector("#characterMakerForm");
 const saveCharacterStatus = document.querySelector("#saveCharacterStatus");
+const liveCharacterPreview = document.querySelector("#liveCharacterPreview");
+const liveCharacterName = document.querySelector("#liveCharacterName");
+const liveCharacterRole = document.querySelector("#liveCharacterRole");
 
 function loadData() {
   const savedV2 = localStorage.getItem(storageKey);
@@ -236,6 +239,10 @@ function setupCharacterMaker() {
     range.addEventListener("input", updateOutput);
     updateOutput();
   });
+
+  characterMakerForm.addEventListener("input", updateLiveCharacterPreview);
+  characterMakerForm.addEventListener("change", updateLiveCharacterPreview);
+  updateLiveCharacterPreview();
 }
 
 function setupHeritagePreview() {
@@ -280,8 +287,53 @@ function setupColourChangers() {
       if (label) {
         label.textContent = chip.dataset.colourName;
       }
+
+      updateLiveCharacterPreview();
     });
   });
+}
+
+function getCurrentCharacterFormData() {
+  if (!characterMakerForm) {
+    return {};
+  }
+
+  const character = Object.fromEntries(new FormData(characterMakerForm).entries());
+  document.querySelectorAll(".feature-pad").forEach((pad) => {
+    character.features = character.features || {};
+    character.features[pad.dataset.xFeature] = pad.dataset.xValue;
+    character.features[pad.dataset.yFeature] = pad.dataset.yValue;
+  });
+  return character;
+}
+
+function updateLiveCharacterPreview() {
+  if (!liveCharacterPreview || !characterMakerForm) {
+    return;
+  }
+
+  const character = getCurrentCharacterFormData();
+  const name = character.name || "New Character";
+  const role = character.role || "Character build preview";
+
+  liveCharacterPreview.innerHTML = renderCharacterPortrait({
+    ...character,
+    name,
+    role,
+    model: character.model || "mp_f_freemode_01",
+    skinMix: character.skinMix || "50",
+    hairColor: character.hairColor || "Dark Brown",
+    highlightColor: character.highlightColor || "Caramel",
+    eyeColor: character.eyeColor || "Green"
+  });
+
+  if (liveCharacterName) {
+    liveCharacterName.textContent = name;
+  }
+
+  if (liveCharacterRole) {
+    liveCharacterRole.textContent = role;
+  }
 }
 
 function clamp(value, min, max) {
@@ -331,6 +383,7 @@ function updatePadPosition(pad, xValue, yValue) {
   pad.closest(".feature-pad-card").querySelector("[data-pad-x]").textContent = xValue;
   pad.closest(".feature-pad-card").querySelector("[data-pad-y]").textContent = yValue;
   pad.setAttribute("aria-valuetext", `${pad.dataset.xFeature} ${xValue}, ${pad.dataset.yFeature} ${yValue}`);
+  updateLiveCharacterPreview();
 }
 
 function renderCounts() {
@@ -637,6 +690,7 @@ if (characterMakerForm) {
     characterMakerForm.reset();
     document.querySelectorAll(".feature-pad").forEach((pad) => updatePadPosition(pad, 0, 0));
     renderAll();
+    updateLiveCharacterPreview();
 
     if (saveCharacterStatus) {
       saveCharacterStatus.textContent = `${character.name || "Character"} saved.`;
@@ -649,6 +703,7 @@ if (resetCharacterForm && characterMakerForm) {
   resetCharacterForm.addEventListener("click", () => {
     characterMakerForm.reset();
     document.querySelectorAll(".feature-pad").forEach((pad) => updatePadPosition(pad, 0, 0));
+    updateLiveCharacterPreview();
     if (saveCharacterStatus) {
       saveCharacterStatus.textContent = "";
     }

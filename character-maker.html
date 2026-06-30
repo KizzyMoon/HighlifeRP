@@ -44,38 +44,46 @@
           <button id="resetCharacterForm" class="ghost-button" type="button">Reset form</button>
         </div>
 
-        <form id="characterMakerForm" class="maker-grid">
-          <fieldset class="form-card">
-            <legend>Identity</legend>
-            <label>Character name<input name="name" required placeholder="Kizzy Moon" /></label>
-            <label>Role / storyline<input name="role" placeholder="Mechanic, crim, civilian, medic..." /></label>
-            <label>Gender / base model<input name="model" placeholder="mp_f_freemode_01 or mp_m_freemode_01" /></label>
-            <label>Voice / vibe<input name="voice" placeholder="Soft, sharp, chaotic, calm..." /></label>
-          </fieldset>
+        <div class="maker-layout">
+          <aside class="live-preview-card" aria-label="Live character preview">
+            <p class="eyebrow">Live preview</p>
+            <div id="liveCharacterPreview" class="live-character-preview"></div>
+            <h3 id="liveCharacterName">New Character</h3>
+            <p id="liveCharacterRole">Character build preview</p>
+          </aside>
 
-          <fieldset class="form-card">
-            <legend>Heritage</legend>
-            <div class="heritage-card">
-              <div class="parent-preview" aria-label="Selected parents">
-                <div class="parent-portrait parent-mother">
-                  <span id="motherInitial">H</span>
+          <form id="characterMakerForm" class="maker-grid">
+            <fieldset class="form-card">
+              <legend>Identity</legend>
+              <label>Character name<input name="name" required placeholder="Kizzy Moon" /></label>
+              <label>Role / storyline<input name="role" placeholder="Mechanic, crim, civilian, medic..." /></label>
+              <label>Gender / base model<input name="model" placeholder="mp_f_freemode_01 or mp_m_freemode_01" /></label>
+              <label>Voice / vibe<input name="voice" placeholder="Soft, sharp, chaotic, calm..." /></label>
+            </fieldset>
+
+            <fieldset class="form-card">
+              <legend>Heritage</legend>
+              <div class="heritage-card">
+                <div class="parent-preview" aria-label="Selected parents">
+                  <div class="parent-portrait parent-mother">
+                    <span id="motherInitial">H</span>
+                  </div>
+                  <div class="parent-portrait parent-father">
+                    <span id="fatherInitial">B</span>
+                  </div>
                 </div>
-                <div class="parent-portrait parent-father">
-                  <span id="fatherInitial">B</span>
-                </div>
+                <label class="heritage-row"><span>Mom</span><select name="mother" id="motherSelect"></select></label>
+                <label class="heritage-row"><span>Dad</span><select name="father" id="fatherSelect"></select></label>
+                <label class="heritage-row slider-row"><span>Resemblance</span><output data-output-for="resemblance">50</output>
+                  <input name="resemblance" type="range" min="0" max="100" value="50" />
+                </label>
+                <label class="heritage-row slider-row"><span>Skin Tone</span><output data-output-for="skinMix">50</output>
+                  <input name="skinMix" type="range" min="0" max="100" value="50" />
+                </label>
               </div>
-              <label class="heritage-row"><span>Mom</span><select name="mother" id="motherSelect"></select></label>
-              <label class="heritage-row"><span>Dad</span><select name="father" id="fatherSelect"></select></label>
-              <label class="heritage-row slider-row"><span>Resemblance</span><output data-output-for="resemblance">50</output>
-                <input name="resemblance" type="range" min="0" max="100" value="50" />
-              </label>
-              <label class="heritage-row slider-row"><span>Skin Tone</span><output data-output-for="skinMix">50</output>
-                <input name="skinMix" type="range" min="0" max="100" value="50" />
-              </label>
-            </div>
-          </fieldset>
+            </fieldset>
 
-          <fieldset class="form-card large-card">
+            <fieldset class="form-card large-card">
             <legend>Face Features</legend>
             <div id="featurePads" class="pad-grid">
               <div class="feature-pad-card">
@@ -149,9 +157,9 @@
                 <div class="pad-values"><span>Chin indent: <output data-pad-x>0</output></span><span>Neck width: <output data-pad-y>0</output></span></div>
               </div>
             </div>
-          </fieldset>
+            </fieldset>
 
-          <fieldset class="form-card">
+            <fieldset class="form-card">
             <legend>Appearance</legend>
             <div class="appearance-menu">
               <label class="appearance-row"><span>Hair</span><input name="hairStyle" placeholder="Style ID / name" /></label>
@@ -197,28 +205,29 @@
                 <button type="button" class="colour-chip" data-colour-name="Purple" style="--chip:#7b4bc4"></button>
               </div>
             </div>
-          </fieldset>
+            </fieldset>
 
-          <fieldset class="form-card">
-            <legend>Appearance Overlays</legend>
-            <label>Blemishes<input name="blemishes" placeholder="Style / opacity" /></label>
-            <label>Ageing<input name="ageing" placeholder="Style / opacity" /></label>
-            <label>Makeup<input name="makeup" placeholder="Style / colour / opacity" /></label>
-            <label>Blush / lipstick<input name="blushLipstick" placeholder="Style / colour / opacity" /></label>
-            <label>Moles / freckles<input name="freckles" placeholder="Style / opacity" /></label>
-          </fieldset>
+            <fieldset class="form-card">
+              <legend>Appearance Overlays</legend>
+              <label>Blemishes<input name="blemishes" placeholder="Style / opacity" /></label>
+              <label>Ageing<input name="ageing" placeholder="Style / opacity" /></label>
+              <label>Makeup<input name="makeup" placeholder="Style / colour / opacity" /></label>
+              <label>Blush / lipstick<input name="blushLipstick" placeholder="Style / colour / opacity" /></label>
+              <label>Moles / freckles<input name="freckles" placeholder="Style / opacity" /></label>
+            </fieldset>
 
-          <fieldset class="form-card">
-            <legend>Clothing and Spawn Notes</legend>
-            <label>Starter outfit<textarea name="outfit" rows="4" placeholder="Top, undershirt, pants, shoes, accessories..."></textarea></label>
-            <label>Creation notes<textarea name="creation" rows="5" placeholder="Anything you need to remake them after a wipe."></textarea></label>
-          </fieldset>
+            <fieldset class="form-card">
+              <legend>Clothing and Spawn Notes</legend>
+              <label>Starter outfit<textarea name="outfit" rows="4" placeholder="Top, undershirt, pants, shoes, accessories..."></textarea></label>
+              <label>Creation notes<textarea name="creation" rows="5" placeholder="Anything you need to remake them after a wipe."></textarea></label>
+            </fieldset>
 
-          <div class="maker-actions">
-            <a class="ghost-link" href="index.html#characters">View saved builds</a>
-            <button class="primary-button" type="submit">Save character build</button>
-          </div>
-        </form>
+            <div class="maker-actions">
+              <a class="ghost-link" href="index.html#characters">View saved builds</a>
+              <button class="primary-button" type="submit">Save character build</button>
+            </div>
+          </form>
+        </div>
         <p id="saveCharacterStatus" class="save-status" aria-live="polite"></p>
       </section>
     </main>

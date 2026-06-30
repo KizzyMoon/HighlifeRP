@@ -267,6 +267,44 @@ h2 {
   gap: 16px;
 }
 
+.maker-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  align-items: start;
+  gap: 18px;
+}
+
+.live-preview-card {
+  position: sticky;
+  top: 24px;
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(2, 5, 7, 0.64);
+  box-shadow: var(--shadow);
+}
+
+.live-character-preview {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: #10161b;
+}
+
+.live-preview-card h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  text-align: center;
+}
+
+.live-preview-card p:last-child {
+  margin: -6px 0 0;
+  color: var(--muted);
+  text-align: center;
+}
+
 .form-card {
   min-width: 0;
   margin: 0;
@@ -1047,9 +1085,14 @@ dialog::backdrop {
   }
 
   .hero,
+  .maker-layout,
   .maker-grid,
   .build-grid {
     grid-template-columns: 1fr;
+  }
+
+  .live-preview-card {
+    position: static;
   }
 
   .large-card,
