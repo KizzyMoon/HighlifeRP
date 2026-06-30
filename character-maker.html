@@ -55,16 +55,24 @@
 
           <fieldset class="form-card">
             <legend>Heritage</legend>
-            <div class="two-col">
-              <label>Mother<select name="mother" id="motherSelect"></select></label>
-              <label>Father<select name="father" id="fatherSelect"></select></label>
+            <div class="heritage-card">
+              <div class="parent-preview" aria-label="Selected parents">
+                <div class="parent-portrait parent-mother">
+                  <span id="motherInitial">H</span>
+                </div>
+                <div class="parent-portrait parent-father">
+                  <span id="fatherInitial">B</span>
+                </div>
+              </div>
+              <label class="heritage-row"><span>Mom</span><select name="mother" id="motherSelect"></select></label>
+              <label class="heritage-row"><span>Dad</span><select name="father" id="fatherSelect"></select></label>
+              <label class="heritage-row slider-row"><span>Resemblance</span><output data-output-for="resemblance">50</output>
+                <input name="resemblance" type="range" min="0" max="100" value="50" />
+              </label>
+              <label class="heritage-row slider-row"><span>Skin Tone</span><output data-output-for="skinMix">50</output>
+                <input name="skinMix" type="range" min="0" max="100" value="50" />
+              </label>
             </div>
-            <label>Resemblance mix <output data-output-for="resemblance">50</output>
-              <input name="resemblance" type="range" min="0" max="100" value="50" />
-            </label>
-            <label>Skin mix <output data-output-for="skinMix">50</output>
-              <input name="skinMix" type="range" min="0" max="100" value="50" />
-            </label>
           </fieldset>
 
           <fieldset class="form-card large-card">

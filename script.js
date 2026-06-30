@@ -162,6 +162,7 @@ function setupCharacterMaker() {
 
   populateSelect(document.querySelector("#motherSelect"), mothers);
   populateSelect(document.querySelector("#fatherSelect"), fathers);
+  setupHeritagePreview();
 
   const featurePads = document.querySelector("#featurePads");
   if (!featurePads) {
@@ -234,6 +235,26 @@ function setupCharacterMaker() {
     range.addEventListener("input", updateOutput);
     updateOutput();
   });
+}
+
+function setupHeritagePreview() {
+  const motherSelect = document.querySelector("#motherSelect");
+  const fatherSelect = document.querySelector("#fatherSelect");
+  const motherInitial = document.querySelector("#motherInitial");
+  const fatherInitial = document.querySelector("#fatherInitial");
+
+  if (!motherSelect || !fatherSelect || !motherInitial || !fatherInitial) {
+    return;
+  }
+
+  const syncParents = () => {
+    motherInitial.textContent = motherSelect.value.slice(0, 1);
+    fatherInitial.textContent = fatherSelect.value.slice(0, 1);
+  };
+
+  motherSelect.addEventListener("change", syncParents);
+  fatherSelect.addEventListener("change", syncParents);
+  syncParents();
 }
 
 function clamp(value, min, max) {

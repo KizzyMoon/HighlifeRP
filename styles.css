@@ -342,6 +342,87 @@ output {
   gap: 14px;
 }
 
+.heritage-card {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.34);
+}
+
+.parent-preview {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 156px;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.22)),
+    linear-gradient(135deg, #cfd4d6, #60666a);
+  filter: grayscale(1);
+}
+
+.parent-portrait {
+  display: grid;
+  place-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.parent-portrait::before {
+  content: "";
+  position: absolute;
+  width: 72px;
+  height: 72px;
+  top: 32px;
+  border-radius: 50%;
+  background: #d0d2d0;
+  box-shadow: 0 78px 0 34px #868b8f;
+}
+
+.parent-mother::before {
+  background: #ded7d0;
+  box-shadow: 0 78px 0 34px #777b82;
+}
+
+.parent-father::before {
+  background: #9a8f87;
+  box-shadow: 0 78px 0 34px #5e6268;
+}
+
+.parent-portrait span {
+  position: relative;
+  z-index: 1;
+  margin-top: 6px;
+  color: rgba(0, 0, 0, 0.5);
+  font-size: 2rem;
+  font-weight: 900;
+}
+
+.heritage-row {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 34px;
+  margin: 0;
+  padding: 6px 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  color: #eef4f6;
+  font-size: 0.84rem;
+}
+
+.heritage-row span {
+  color: #d8e2e6;
+}
+
+.heritage-row select,
+.heritage-row input {
+  min-height: 28px;
+  padding: 4px 8px;
+}
+
+.slider-row {
+  grid-template-columns: 92px 34px minmax(0, 1fr);
+}
+
 .feature-pad-card {
   min-width: 0;
   display: grid;
