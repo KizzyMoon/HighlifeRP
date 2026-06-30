@@ -613,7 +613,16 @@ if (closeCharacterDetails && characterDetailsDialog) {
 
 document.querySelectorAll("[data-open-dialog]").forEach((button) => {
   button.addEventListener("click", () => {
-    document.querySelector(`#${button.dataset.openDialog}`).showModal();
+    const dialog = document.querySelector(`#${button.dataset.openDialog}`);
+    if (!dialog) {
+      return;
+    }
+
+    if (typeof dialog.showModal === "function") {
+      dialog.showModal();
+    } else {
+      dialog.setAttribute("open", "");
+    }
   });
 });
 
