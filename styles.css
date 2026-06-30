@@ -268,41 +268,7 @@ h2 {
 }
 
 .maker-layout {
-  display: grid;
-  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
-  align-items: start;
-  gap: 18px;
-}
-
-.live-preview-card {
-  position: sticky;
-  top: 24px;
-  display: grid;
-  gap: 12px;
-  padding: 16px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: rgba(2, 5, 7, 0.64);
-  box-shadow: var(--shadow);
-}
-
-.live-character-preview {
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  background: #10161b;
-}
-
-.live-preview-card h3 {
-  margin: 0;
-  font-size: 1.25rem;
-  text-align: center;
-}
-
-.live-preview-card p:last-child {
-  margin: -6px 0 0;
-  color: var(--muted);
-  text-align: center;
+  display: block;
 }
 
 .form-card {
@@ -376,8 +342,8 @@ output {
 
 .pad-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 16px;
 }
 
 .heritage-card {
@@ -669,11 +635,14 @@ output {
 .axis-label {
   position: static;
   color: #e7eef0;
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 700;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
   pointer-events: none;
   white-space: nowrap;
+  max-width: 86px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .axis-top {
@@ -713,11 +682,11 @@ output {
     ". top ."
     "left pad right"
     ". bottom .";
-  grid-template-columns: minmax(58px, 0.8fr) minmax(150px, 178px) minmax(58px, 0.8fr);
+  grid-template-columns: minmax(86px, 1fr) minmax(150px, 178px) minmax(86px, 1fr);
   grid-template-rows: 24px auto 24px;
   align-items: center;
   justify-content: center;
-  column-gap: 8px;
+  column-gap: 10px;
   width: 100%;
 }
 
@@ -1174,14 +1143,9 @@ dialog::backdrop {
   }
 
   .hero,
-  .maker-layout,
   .maker-grid,
   .build-grid {
     grid-template-columns: 1fr;
-  }
-
-  .live-preview-card {
-    position: static;
   }
 
   .large-card,

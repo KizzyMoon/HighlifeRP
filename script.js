@@ -53,8 +53,6 @@ const starterData = {
       makeup: "Subtle eyeliner",
       blushLipstick: "Muted rose lipstick",
       freckles: "Light freckles",
-      outfit: "Black jacket, blue jeans, white trainers",
-      creation: "Use this card as a template for the exact settings you need after a wipe.",
       features: Object.fromEntries(faceFeatures.map((feature) => [feature, "0"]))
     }
   ],
@@ -103,9 +101,6 @@ const categoryFilter = document.querySelector("#categoryFilter");
 const notesBox = document.querySelector("#notesBox");
 const characterMakerForm = document.querySelector("#characterMakerForm");
 const saveCharacterStatus = document.querySelector("#saveCharacterStatus");
-const liveCharacterPreview = document.querySelector("#liveCharacterPreview");
-const liveCharacterName = document.querySelector("#liveCharacterName");
-const liveCharacterRole = document.querySelector("#liveCharacterRole");
 const characterPhotoInput = document.querySelector("#characterPhotoInput");
 const characterPhotoData = document.querySelector("#characterPhotoData");
 
@@ -242,10 +237,7 @@ function setupCharacterMaker() {
     updateOutput();
   });
 
-  characterMakerForm.addEventListener("input", updateLiveCharacterPreview);
-  characterMakerForm.addEventListener("change", updateLiveCharacterPreview);
   setupCharacterPhotoUpload();
-  updateLiveCharacterPreview();
 }
 
 function setupCharacterPhotoUpload() {
@@ -257,13 +249,11 @@ function setupCharacterPhotoUpload() {
     const file = characterPhotoInput.files?.[0];
     if (!file) {
       characterPhotoData.value = "";
-      updateLiveCharacterPreview();
       return;
     }
 
     resizeImageFile(file, 900).then((dataUrl) => {
       characterPhotoData.value = dataUrl;
-      updateLiveCharacterPreview();
     });
   });
 }
@@ -331,52 +321,8 @@ function setupColourChangers() {
         label.textContent = chip.dataset.colourName;
       }
 
-      updateLiveCharacterPreview();
     });
   });
-}
-
-function getCurrentCharacterFormData() {
-  if (!characterMakerForm) {
-    return {};
-  }
-
-  const character = Object.fromEntries(new FormData(characterMakerForm).entries());
-  document.querySelectorAll(".feature-pad").forEach((pad) => {
-    character.features = character.features || {};
-    character.features[pad.dataset.xFeature] = pad.dataset.xValue;
-    character.features[pad.dataset.yFeature] = pad.dataset.yValue;
-  });
-  return character;
-}
-
-function updateLiveCharacterPreview() {
-  if (!liveCharacterPreview || !characterMakerForm) {
-    return;
-  }
-
-  const character = getCurrentCharacterFormData();
-  const name = character.name || "New Character";
-  const role = character.role || "Character build preview";
-
-  liveCharacterPreview.innerHTML = renderCharacterPreview({
-    ...character,
-    name,
-    role,
-    model: character.model || "mp_f_freemode_01",
-    skinMix: character.skinMix || "50",
-    hairColor: character.hairColor || "Dark Brown",
-    highlightColor: character.highlightColor || "Caramel",
-    eyeColor: character.eyeColor || "Green"
-  });
-
-  if (liveCharacterName) {
-    liveCharacterName.textContent = name;
-  }
-
-  if (liveCharacterRole) {
-    liveCharacterRole.textContent = role;
-  }
 }
 
 function clamp(value, min, max) {
@@ -426,7 +372,6 @@ function updatePadPosition(pad, xValue, yValue) {
   pad.closest(".feature-pad-card").querySelector("[data-pad-x]").textContent = xValue;
   pad.closest(".feature-pad-card").querySelector("[data-pad-y]").textContent = yValue;
   pad.setAttribute("aria-valuetext", `${pad.dataset.xFeature} ${xValue}, ${pad.dataset.yFeature} ${yValue}`);
-  updateLiveCharacterPreview();
 }
 
 function renderCounts() {
@@ -452,7 +397,6 @@ function renderCharacters() {
             ${renderCharacterPreview(character)}
           </button>
           <h3>${escapeHtml(character.name)}</h3>
-          <p>${escapeHtml(character.role)}</p>
         </article>
       `;
     })
@@ -471,9 +415,7 @@ function renderCharacterDetails(character) {
       <header>
         <div>
           <h3>${escapeHtml(character.name)}</h3>
-          <p>${escapeHtml(character.role)}</p>
         </div>
-        <p>${escapeHtml(character.model)}</p>
       </header>
       <div class="character-detail-top">
         ${renderCharacterPreview(character)}
@@ -507,13 +449,6 @@ function renderCharacterDetails(character) {
         })}
         ${renderBlock("Face Features", {
           Settings: featureSummary
-        })}
-        ${renderBlock("Clothing", {
-          Outfit: character.outfit
-        })}
-        ${renderBlock("Notes", {
-          Voice: character.voice,
-          Creation: character.creation
         })}
       </div>
     </article>
@@ -777,7 +712,6 @@ if (characterMakerForm) {
     }
     document.querySelectorAll(".feature-pad").forEach((pad) => updatePadPosition(pad, 0, 0));
     renderAll();
-    updateLiveCharacterPreview();
 
     if (saveCharacterStatus) {
       saveCharacterStatus.textContent = `${character.name || "Character"} saved.`;
@@ -793,7 +727,6 @@ if (resetCharacterForm && characterMakerForm) {
       characterPhotoData.value = "";
     }
     document.querySelectorAll(".feature-pad").forEach((pad) => updatePadPosition(pad, 0, 0));
-    updateLiveCharacterPreview();
     if (saveCharacterStatus) {
       saveCharacterStatus.textContent = "";
     }

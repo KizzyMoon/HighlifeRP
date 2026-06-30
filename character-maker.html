@@ -45,20 +45,10 @@
         </div>
 
         <div class="maker-layout">
-          <aside class="live-preview-card" aria-label="Live character preview">
-            <p class="eyebrow">Live preview</p>
-            <div id="liveCharacterPreview" class="live-character-preview"></div>
-            <h3 id="liveCharacterName">New Character</h3>
-            <p id="liveCharacterRole">Character build preview</p>
-          </aside>
-
           <form id="characterMakerForm" class="maker-grid">
             <fieldset class="form-card">
               <legend>Identity</legend>
               <label>Character name<input name="name" required placeholder="Kizzy Moon" /></label>
-              <label>Role / storyline<input name="role" placeholder="Mechanic, crim, civilian, medic..." /></label>
-              <label>Gender / base model<input name="model" placeholder="mp_f_freemode_01 or mp_m_freemode_01" /></label>
-              <label>Voice / vibe<input name="voice" placeholder="Soft, sharp, chaotic, calm..." /></label>
               <label>Character photo<input id="characterPhotoInput" name="photo" type="file" accept="image/*" /></label>
               <input id="characterPhotoData" name="photoData" type="hidden" />
             </fieldset>
@@ -228,12 +218,6 @@
                   <button type="button" class="colour-chip" data-colour-name="White" style="--chip:#efebe3"></button>
                 </div>
               </div>
-            </fieldset>
-
-            <fieldset class="form-card">
-              <legend>Clothing and Spawn Notes</legend>
-              <label>Starter outfit<textarea name="outfit" rows="4" placeholder="Top, undershirt, pants, shoes, accessories..."></textarea></label>
-              <label>Creation notes<textarea name="creation" rows="5" placeholder="Anything you need to remake them after a wipe."></textarea></label>
             </fieldset>
 
             <div class="maker-actions">
