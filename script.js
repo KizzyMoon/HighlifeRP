@@ -485,34 +485,47 @@ function renderCharacterPortrait(character) {
   const lip = colorFromText(character.blushLipstick || character.makeupColor || character.makeup, "#b75d68");
   const feminine = String(character.model || "").includes("_f_");
   const hairPath = feminine
-    ? "M78 86c2-34 23-54 50-54s48 20 50 54c-10-21-22-29-50-29S88 65 78 86z"
-    : "M82 78c8-30 23-44 46-44s38 14 46 44c-16-13-30-18-46-18s-30 5-46 18z";
+    ? "M72 103c4-44 27-70 59-70 29 0 52 23 58 64-14-15-31-23-52-24-26-2-47 8-65 30z"
+    : "M78 91c11-38 29-58 55-58 27 0 47 20 57 58-17-12-36-18-56-18-21 0-39 6-56 18z";
   const shoulder = feminine
-    ? "M50 204c16-31 44-45 78-45s62 14 78 45v22H50z"
-    : "M42 204c18-28 48-43 86-43s68 15 86 43v22H42z";
+    ? "M42 224c19-39 50-58 91-58s72 19 91 58v34H42z"
+    : "M36 224c21-37 54-56 97-56s76 19 97 56v34H36z";
 
   return `
     <svg class="character-portrait" viewBox="0 0 256 300" role="img" aria-label="${escapeHtml(character.name)} preview">
       <defs>
         <linearGradient id="portrait-bg-${portraitId(character.name)}" x1="0" x2="1" y1="0" y2="1">
-          <stop offset="0" stop-color="#182638"/>
-          <stop offset="1" stop-color="#0e1318"/>
+          <stop offset="0" stop-color="#172234"/>
+          <stop offset="1" stop-color="#080d12"/>
+        </linearGradient>
+        <linearGradient id="board-${portraitId(character.name)}" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0" stop-color="#20262b"/>
+          <stop offset="1" stop-color="#090b0e"/>
         </linearGradient>
       </defs>
       <rect width="256" height="300" rx="14" fill="url(#portrait-bg-${portraitId(character.name)})"/>
-      <circle cx="128" cy="116" r="72" fill="rgba(255,255,255,0.05)"/>
-      <path d="${shoulder}" fill="#273342"/>
-      <path d="M94 156h68v40c0 17-15 29-34 29s-34-12-34-29z" fill="${skin}"/>
-      <ellipse cx="128" cy="104" rx="54" ry="66" fill="${skin}"/>
+      <g opacity="0.23">
+        <path d="M18 82h220M18 122h220M18 162h220M18 202h220" stroke="#d8e0e3" stroke-width="3"/>
+        <text x="205" y="79" fill="#d8e0e3" font-family="Arial" font-size="17">6'</text>
+        <text x="205" y="119" fill="#d8e0e3" font-family="Arial" font-size="17">5'</text>
+      </g>
+      <circle cx="132" cy="126" r="73" fill="rgba(255,255,255,0.045)"/>
+      <path d="${shoulder}" fill="#222b36"/>
+      <path d="M101 157h63v43c0 17-14 30-31 30s-32-13-32-30z" fill="${skin}"/>
+      <ellipse cx="133" cy="112" rx="48" ry="61" fill="${skin}"/>
+      <path d="M173 121c6 2 9 8 7 16-2 9-8 14-14 12" fill="${skin}"/>
+      <path d="M93 121c-6 2-9 8-7 16 2 9 8 14 14 12" fill="${skin}"/>
       <path d="${hairPath}" fill="${hair}"/>
-      <path d="M83 91c10-24 27-38 45-38 20 0 37 13 45 38-15-12-30-17-45-17s-30 5-45 17z" fill="${highlight}" opacity="0.55"/>
-      <ellipse cx="107" cy="113" rx="8" ry="6" fill="#fff"/>
-      <ellipse cx="149" cy="113" rx="8" ry="6" fill="#fff"/>
-      <circle cx="107" cy="113" r="4" fill="${eyes}"/>
-      <circle cx="149" cy="113" r="4" fill="${eyes}"/>
-      <path d="M116 142c8 6 16 6 24 0" fill="none" stroke="${lip}" stroke-width="5" stroke-linecap="round"/>
-      <path d="M98 98c12-7 22-7 31 0M157 98c-12-7-22-7-31 0" fill="none" stroke="${hair}" stroke-width="5" stroke-linecap="round"/>
-      <path d="M128 112c-4 13-7 23-2 31" fill="none" stroke="rgba(86,53,38,0.4)" stroke-width="4" stroke-linecap="round"/>
+      <path d="M84 96c11-25 29-39 52-39 21 0 38 12 51 35-18-11-37-16-57-15-20 1-35 7-46 19z" fill="${highlight}" opacity="0.42"/>
+      <path d="M103 104c10-6 21-7 31-2M147 102c9-4 18-3 26 2" fill="none" stroke="${hair}" stroke-width="5" stroke-linecap="round" opacity="0.86"/>
+      <ellipse cx="116" cy="119" rx="6" ry="4" fill="#e8ece8"/>
+      <ellipse cx="154" cy="119" rx="6" ry="4" fill="#e8ece8"/>
+      <circle cx="116" cy="119" r="3" fill="${eyes}"/>
+      <circle cx="154" cy="119" r="3" fill="${eyes}"/>
+      <path d="M134 121c-3 12-6 21-1 29" fill="none" stroke="rgba(70,42,31,0.42)" stroke-width="3" stroke-linecap="round"/>
+      <path d="M123 160c8 4 18 4 27 0" fill="none" stroke="${lip}" stroke-width="4" stroke-linecap="round" opacity="0.82"/>
+      <rect x="54" y="238" width="148" height="46" rx="4" fill="url(#board-${portraitId(character.name)})" stroke="#292f34" stroke-width="3"/>
+      <text x="128" y="267" text-anchor="middle" fill="#e9eceb" font-family="Arial Narrow, Arial, sans-serif" font-size="18" font-weight="800">${escapeHtml(character.name || "New Character").slice(0, 14)}</text>
     </svg>
   `;
 }
