@@ -106,6 +106,8 @@ const saveCharacterStatus = document.querySelector("#saveCharacterStatus");
 const liveCharacterPreview = document.querySelector("#liveCharacterPreview");
 const liveCharacterName = document.querySelector("#liveCharacterName");
 const liveCharacterRole = document.querySelector("#liveCharacterRole");
+const characterPhotoInput = document.querySelector("#characterPhotoInput");
+const characterPhotoData = document.querySelector("#characterPhotoData");
 
 function loadData() {
   const savedV2 = localStorage.getItem(storageKey);
@@ -242,7 +244,48 @@ function setupCharacterMaker() {
 
   characterMakerForm.addEventListener("input", updateLiveCharacterPreview);
   characterMakerForm.addEventListener("change", updateLiveCharacterPreview);
+  setupCharacterPhotoUpload();
   updateLiveCharacterPreview();
+}
+
+function setupCharacterPhotoUpload() {
+  if (!characterPhotoInput || !characterPhotoData) {
+    return;
+  }
+
+  characterPhotoInput.addEventListener("change", () => {
+    const file = characterPhotoInput.files?.[0];
+    if (!file) {
+      characterPhotoData.value = "";
+      updateLiveCharacterPreview();
+      return;
+    }
+
+    resizeImageFile(file, 900).then((dataUrl) => {
+      characterPhotoData.value = dataUrl;
+      updateLiveCharacterPreview();
+    });
+  });
+}
+
+function resizeImageFile(file, maxWidth) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      const image = new Image();
+      image.addEventListener("load", () => {
+        const scale = Math.min(1, maxWidth / image.width);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(image.width * scale);
+        canvas.height = Math.round(image.height * scale);
+        const context = canvas.getContext("2d");
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.82));
+      });
+      image.src = reader.result;
+    });
+    reader.readAsDataURL(file);
+  });
 }
 
 function setupHeritagePreview() {
@@ -316,7 +359,7 @@ function updateLiveCharacterPreview() {
   const name = character.name || "New Character";
   const role = character.role || "Character build preview";
 
-  liveCharacterPreview.innerHTML = renderCharacterPortrait({
+  liveCharacterPreview.innerHTML = renderCharacterPreview({
     ...character,
     name,
     role,
@@ -406,7 +449,7 @@ function renderCharacters() {
       return `
         <article class="character-tile">
           <button class="portrait-button" type="button" data-character-index="${characterIndex}" aria-label="View ${escapeHtml(character.name)} settings">
-            ${renderCharacterPortrait(character)}
+            ${renderCharacterPreview(character)}
           </button>
           <h3>${escapeHtml(character.name)}</h3>
           <p>${escapeHtml(character.role)}</p>
@@ -433,7 +476,7 @@ function renderCharacterDetails(character) {
         <p>${escapeHtml(character.model)}</p>
       </header>
       <div class="character-detail-top">
-        ${renderCharacterPortrait(character)}
+        ${renderCharacterPreview(character)}
       </div>
       <div class="build-grid">
         ${renderBlock("Heritage", {
@@ -528,6 +571,20 @@ function renderCharacterPortrait(character) {
       <text x="128" y="267" text-anchor="middle" fill="#e9eceb" font-family="Arial Narrow, Arial, sans-serif" font-size="18" font-weight="800">${escapeHtml(character.name || "New Character").slice(0, 14)}</text>
     </svg>
   `;
+}
+
+function renderCharacterPreview(character) {
+  if (character.photoData) {
+    return `
+      <img
+        class="character-portrait character-photo"
+        src="${escapeHtml(character.photoData)}"
+        alt="${escapeHtml(character.name || "Character")} preview"
+      />
+    `;
+  }
+
+  return renderCharacterPortrait(character);
 }
 
 function portraitId(value) {
@@ -700,6 +757,9 @@ if (characterMakerForm) {
     const features = {};
 
     formData.forEach((value, key) => {
+      if (key === "photo") {
+        return;
+      }
       character[key] = value;
     });
 
@@ -712,6 +772,9 @@ if (characterMakerForm) {
     data.characters.unshift(character);
     saveData();
     characterMakerForm.reset();
+    if (characterPhotoData) {
+      characterPhotoData.value = "";
+    }
     document.querySelectorAll(".feature-pad").forEach((pad) => updatePadPosition(pad, 0, 0));
     renderAll();
     updateLiveCharacterPreview();
@@ -726,6 +789,9 @@ const resetCharacterForm = document.querySelector("#resetCharacterForm");
 if (resetCharacterForm && characterMakerForm) {
   resetCharacterForm.addEventListener("click", () => {
     characterMakerForm.reset();
+    if (characterPhotoData) {
+      characterPhotoData.value = "";
+    }
     document.querySelectorAll(".feature-pad").forEach((pad) => updatePadPosition(pad, 0, 0));
     updateLiveCharacterPreview();
     if (saveCharacterStatus) {

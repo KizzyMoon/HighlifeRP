@@ -769,6 +769,12 @@ output {
   aspect-ratio: 4 / 5;
 }
 
+.character-photo {
+  height: auto;
+  object-fit: cover;
+  background: #10161b;
+}
+
 .character-tile h3 {
   margin: 0;
   text-align: center;
