@@ -1,10 +1,10 @@
 # HighlifeRP
 
-A small GitHub Pages database for Highlife/FiveM reference notes.
+A personal GitHub Pages vault for Highlife/FiveM reference notes.
 
 ## What it tracks
 
-- Character customisation notes, including GTA V creation details, hair colour, eye colour, and role notes.
+- GTA V/FiveM character maker settings, including heritage, face feature sliders, hair, colours, overlays, clothing, and wipe recovery notes.
 - Paint codes with RGB values and visual swatches.
 - Cars with prices, dealership/store, category, and notes.
 - General Highlife notes.

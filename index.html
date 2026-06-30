@@ -3,91 +3,149 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Highlife Database</title>
+    <title>Highlife RP Vault</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <header class="app-header">
-      <nav class="nav" aria-label="Main navigation">
-        <a href="#characters">Characters</a>
+    <aside class="sidebar">
+      <a class="brand" href="#top" aria-label="Highlife RP Vault home">
+        <span>HL</span>
+        <strong>Highlife RP Vault</strong>
+      </a>
+      <nav aria-label="Main navigation">
+        <a href="#maker">Character Maker</a>
+        <a href="#characters">Saved Builds</a>
         <a href="#paint">Paint Codes</a>
-        <a href="#cars">Cars</a>
+        <a href="#cars">Vehicle List</a>
         <a href="#notes">Notes</a>
       </nav>
-      <section class="hero" aria-labelledby="page-title">
-        <div>
-          <p class="kicker">FiveM server reference</p>
-          <h1 id="page-title">Highlife Database</h1>
+    </aside>
+
+    <main id="top" class="app-shell">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">FiveM wipe prep and personal reference</p>
+          <h1>Highlife RP Vault</h1>
           <p>
-            A personal hub for character builds, paint colours, car prices,
-            stores, categories, and any other Highlife details worth keeping.
+            Keep your character creation settings, vehicle prices, paint codes,
+            and server notes in one private place.
           </p>
         </div>
-        <div class="hero-panel" aria-label="Quick database counts">
-          <span>
-            <strong id="characterCount">0</strong>
-            Characters
-          </span>
-          <span>
-            <strong id="paintCount">0</strong>
-            Paint codes
-          </span>
-          <span>
-            <strong id="carCount">0</strong>
-            Cars
-          </span>
+        <div class="status-grid" aria-label="Database counts">
+          <span><strong id="characterCount">0</strong> Character builds</span>
+          <span><strong id="paintCount">0</strong> Paint codes</span>
+          <span><strong id="carCount">0</strong> Vehicles</span>
         </div>
       </section>
-    </header>
 
-    <main>
-      <section id="characters" class="section">
+      <section id="maker" class="panel feature-panel">
         <div class="section-heading">
           <div>
-            <p class="kicker">GTA V customisation</p>
-            <h2>Characters</h2>
+            <p class="eyebrow">GTA V style creator</p>
+            <h2>Character Maker</h2>
           </div>
-          <button class="primary-button" data-open-dialog="characterDialog">Add character</button>
+          <button id="resetCharacterForm" class="ghost-button" type="button">Reset form</button>
         </div>
-        <div id="characterGrid" class="card-grid"></div>
+
+        <form id="characterMakerForm" class="maker-grid">
+          <fieldset class="form-card">
+            <legend>Identity</legend>
+            <label>Character name<input name="name" required placeholder="Kizzy Moon" /></label>
+            <label>Role / storyline<input name="role" placeholder="Mechanic, crim, civilian, medic..." /></label>
+            <label>Gender / base model<input name="model" placeholder="mp_f_freemode_01 or mp_m_freemode_01" /></label>
+            <label>Voice / vibe<input name="voice" placeholder="Soft, sharp, chaotic, calm..." /></label>
+          </fieldset>
+
+          <fieldset class="form-card">
+            <legend>Heritage</legend>
+            <div class="two-col">
+              <label>Mother<select name="mother" id="motherSelect"></select></label>
+              <label>Father<select name="father" id="fatherSelect"></select></label>
+            </div>
+            <label>Resemblance mix <output data-output-for="resemblance">50</output>
+              <input name="resemblance" type="range" min="0" max="100" value="50" />
+            </label>
+            <label>Skin mix <output data-output-for="skinMix">50</output>
+              <input name="skinMix" type="range" min="0" max="100" value="50" />
+            </label>
+          </fieldset>
+
+          <fieldset class="form-card large-card">
+            <legend>Face Features</legend>
+            <div id="featureSliders" class="slider-grid"></div>
+          </fieldset>
+
+          <fieldset class="form-card">
+            <legend>Hair and Colour</legend>
+            <div class="two-col">
+              <label>Hair style<input name="hairStyle" placeholder="Style ID / name" /></label>
+              <label>Hair colour<input name="hairColor" placeholder="Colour ID / name" /></label>
+              <label>Highlight colour<input name="highlightColor" placeholder="Colour ID / name" /></label>
+              <label>Eye colour<input name="eyeColor" placeholder="Colour ID / name" /></label>
+            </div>
+            <label>Eyebrows<input name="eyebrows" placeholder="Shape, colour, opacity" /></label>
+            <label>Facial hair<input name="facialHair" placeholder="Style, colour, opacity" /></label>
+          </fieldset>
+
+          <fieldset class="form-card">
+            <legend>Appearance Overlays</legend>
+            <label>Blemishes<input name="blemishes" placeholder="Style / opacity" /></label>
+            <label>Ageing<input name="ageing" placeholder="Style / opacity" /></label>
+            <label>Makeup<input name="makeup" placeholder="Style / colour / opacity" /></label>
+            <label>Blush / lipstick<input name="blushLipstick" placeholder="Style / colour / opacity" /></label>
+            <label>Moles / freckles<input name="freckles" placeholder="Style / opacity" /></label>
+          </fieldset>
+
+          <fieldset class="form-card">
+            <legend>Clothing and Spawn Notes</legend>
+            <label>Starter outfit<textarea name="outfit" rows="4" placeholder="Top, undershirt, pants, shoes, accessories..."></textarea></label>
+            <label>Creation notes<textarea name="creation" rows="5" placeholder="Anything you need to remake them after a wipe."></textarea></label>
+          </fieldset>
+
+          <div class="maker-actions">
+            <button class="primary-button" type="submit">Save character build</button>
+          </div>
+        </form>
       </section>
 
-      <section id="paint" class="section section-alt">
+      <section id="characters" class="panel">
         <div class="section-heading">
           <div>
-            <p class="kicker">RGB and visual swatches</p>
+            <p class="eyebrow">Wipe recovery cards</p>
+            <h2>Saved Character Builds</h2>
+          </div>
+        </div>
+        <div id="characterGrid" class="character-list"></div>
+      </section>
+
+      <section id="paint" class="panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">RGB crew and custom colours</p>
             <h2>Paint Codes</h2>
           </div>
-          <button class="primary-button" data-open-dialog="paintDialog">Add paint</button>
+          <button class="primary-button" data-open-dialog="paintDialog" type="button">Add paint</button>
         </div>
         <div id="paintGrid" class="paint-grid"></div>
       </section>
 
-      <section id="cars" class="section">
+      <section id="cars" class="panel">
         <div class="section-heading">
           <div>
-            <p class="kicker">Prices, stores, and categories</p>
-            <h2>Cars</h2>
+            <p class="eyebrow">Dealership tracker</p>
+            <h2>Vehicle List</h2>
           </div>
-          <button class="primary-button" data-open-dialog="carDialog">Add car</button>
+          <button class="primary-button" data-open-dialog="carDialog" type="button">Add vehicle</button>
         </div>
         <div class="table-tools">
-          <label>
-            Search
-            <input id="carSearch" type="search" placeholder="Name, store, category..." />
-          </label>
-          <label>
-            Category
-            <select id="categoryFilter">
-              <option value="all">All categories</option>
-            </select>
-          </label>
+          <label>Search<input id="carSearch" type="search" placeholder="Name, store, category..." /></label>
+          <label>Category<select id="categoryFilter"><option value="all">All categories</option></select></label>
         </div>
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>Car</th>
+                <th>Vehicle</th>
                 <th>Price</th>
                 <th>Store</th>
                 <th>Category</th>
@@ -99,39 +157,26 @@
         </div>
       </section>
 
-      <section id="notes" class="section section-alt">
+      <section id="notes" class="panel">
         <div class="section-heading">
           <div>
-            <p class="kicker">Extra space</p>
+            <p class="eyebrow">Everything else</p>
             <h2>Notes</h2>
           </div>
         </div>
-        <textarea id="notesBox" rows="8" aria-label="Highlife notes"></textarea>
+        <textarea id="notesBox" rows="9" aria-label="Highlife notes"></textarea>
       </section>
     </main>
-
-    <dialog id="characterDialog">
-      <form method="dialog" class="dialog-form" data-form="characters">
-        <h3>Add Character</h3>
-        <label>Name<input name="name" required /></label>
-        <label>Role / vibe<input name="role" placeholder="Mechanic, crim, civilian..." /></label>
-        <label>Hair colour<input name="hair" /></label>
-        <label>Eye colour<input name="eyes" /></label>
-        <label>GTA V creation notes<textarea name="creation" rows="4"></textarea></label>
-        <div class="dialog-actions">
-          <button value="cancel">Cancel</button>
-          <button class="primary-button" value="default">Save</button>
-        </div>
-      </form>
-    </dialog>
 
     <dialog id="paintDialog">
       <form method="dialog" class="dialog-form" data-form="paints">
         <h3>Add Paint Code</h3>
         <label>Name<input name="name" required /></label>
-        <label>Red<input name="r" type="number" min="0" max="255" required /></label>
-        <label>Green<input name="g" type="number" min="0" max="255" required /></label>
-        <label>Blue<input name="b" type="number" min="0" max="255" required /></label>
+        <div class="three-col">
+          <label>Red<input name="r" type="number" min="0" max="255" required /></label>
+          <label>Green<input name="g" type="number" min="0" max="255" required /></label>
+          <label>Blue<input name="b" type="number" min="0" max="255" required /></label>
+        </div>
         <label>Finish / notes<input name="notes" placeholder="Metallic, pearlescent, crew colour..." /></label>
         <div class="dialog-actions">
           <button value="cancel">Cancel</button>
@@ -142,7 +187,7 @@
 
     <dialog id="carDialog">
       <form method="dialog" class="dialog-form" data-form="cars">
-        <h3>Add Car</h3>
+        <h3>Add Vehicle</h3>
         <label>Name<input name="name" required /></label>
         <label>Price<input name="price" placeholder="$125,000" /></label>
         <label>Store<input name="store" placeholder="PDM, Luxury Autos..." /></label>

@@ -24,4 +24,4 @@ The page should publish at:
 
 ## Important Note
 
-The site's add buttons save new entries in your browser only. To make entries visible to everyone on GitHub Pages, add them to the starter data inside `script.js`.
+The site's character maker, add buttons, and notes save new entries in your browser only. That works well for a private personal vault. To bake entries into the site files permanently, add them to the starter data inside `script.js`.
