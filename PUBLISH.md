@@ -4,6 +4,7 @@ The site files are ready in this folder:
 
 - `index.html`
 - `character-maker.html`
+- `plates.html`
 - `styles.css`
 - `script.js`
 - `.nojekyll`

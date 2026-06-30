@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Custom Plates | Highlife RP Vault</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <aside class="sidebar">
+      <a class="brand" href="index.html" aria-label="Highlife RP Vault home">
+        <span>HL</span>
+        <strong>Highlife RP Vault</strong>
+      </a>
+      <nav aria-label="Main navigation">
+        <a href="character-maker.html">Character Maker</a>
+        <a href="plates.html">Custom Plates</a>
+        <a href="index.html#characters">Saved Builds</a>
+        <a href="index.html#paint">Paint Codes</a>
+        <a href="index.html#cars">Vehicle List</a>
+        <a href="index.html#notes">Notes</a>
+      </nav>
+    </aside>
+
+    <main id="top" class="app-shell">
+      <section class="hero compact-hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Owned custom plates</p>
+          <h1>Custom Plates</h1>
+          <p>
+            Keep track of every plate you own, what car it belongs to, and any
+            transfer or wipe notes.
+          </p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Garage identity</p>
+            <h2>Plate Collection</h2>
+          </div>
+          <button class="primary-button" data-open-dialog="plateDialog" type="button">Add plate</button>
+        </div>
+        <div id="plateGrid" class="plate-grid"></div>
+      </section>
+    </main>
+
+    <dialog id="plateDialog">
+      <form method="dialog" class="dialog-form" data-form="plates">
+        <h3>Add Custom Plate</h3>
+        <label>Plate text<input name="text" maxlength="8" required placeholder="KIZZY" /></label>
+        <label>Assigned vehicle<input name="vehicle" placeholder="Sultan RS, Comet, empty..." /></label>
+        <label>Plate style
+          <select name="style">
+            <option value="san-andreas">San Andreas</option>
+            <option value="blue">Blue on white</option>
+            <option value="black">Black plate</option>
+            <option value="yellow">Yellow plate</option>
+          </select>
+        </label>
+        <label>Notes<textarea name="notes" rows="3" placeholder="Bought from, transfer plans, wipe notes..."></textarea></label>
+        <div class="dialog-actions">
+          <button value="cancel">Cancel</button>
+          <button class="primary-button" value="default">Save</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="script.js"></script>
+  </body>
+</html>

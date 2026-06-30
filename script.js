@@ -79,6 +79,14 @@ const starterData = {
       notes: "Useful format for dealership tracking."
     }
   ],
+  plates: [
+    {
+      text: "KIZZY",
+      vehicle: "Example Sultan RS",
+      style: "san-andreas",
+      notes: "Example custom plate. Replace or delete this."
+    }
+  ],
   notes: "Add server rules, useful locations, mechanic contacts, favourite builds, or future ideas here."
 };
 
@@ -89,6 +97,7 @@ const characterGrid = document.querySelector("#characterGrid");
 const characterDetailsDialog = document.querySelector("#characterDetailsDialog");
 const characterDetails = document.querySelector("#characterDetails");
 const paintGrid = document.querySelector("#paintGrid");
+const plateGrid = document.querySelector("#plateGrid");
 const carTable = document.querySelector("#carTable");
 const carSearch = document.querySelector("#carSearch");
 const categoryFilter = document.querySelector("#categoryFilter");
@@ -503,10 +512,41 @@ function renderCars() {
     .join("");
 }
 
+function renderPlates() {
+  if (!plateGrid) {
+    return;
+  }
+
+  data.plates = data.plates || [];
+  plateGrid.innerHTML = data.plates
+    .map((plate, plateIndex) => {
+      return `
+        <article class="plate-card">
+          <div class="gta-plate plate-${escapeHtml(plate.style || "san-andreas")}">
+            <span class="plate-state">San Andreas</span>
+            <strong>${escapeHtml(formatPlateText(plate.text))}</strong>
+          </div>
+          <div class="plate-card-content">
+            <h3>${escapeHtml(formatPlateText(plate.text))}</h3>
+            <p><span>Vehicle:</span> ${escapeHtml(plate.vehicle || "Unassigned")}</p>
+            <p>${escapeHtml(plate.notes)}</p>
+            <button class="danger-button" type="button" data-delete-plate="${plateIndex}">Delete</button>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+}
+
+function formatPlateText(value) {
+  return String(value || "").toUpperCase().replace(/[^A-Z0-9 ]/g, "").slice(0, 8);
+}
+
 function renderAll() {
   renderCounts();
   renderCharacters();
   renderPaints();
+  renderPlates();
   renderCategoryFilter();
   renderCars();
 }
@@ -600,6 +640,16 @@ document.querySelectorAll(".dialog-form").forEach((form) => {
       data.cars.push(formData);
     }
 
+    if (form.dataset.form === "plates") {
+      data.plates = data.plates || [];
+      data.plates.push({
+        text: formatPlateText(formData.text),
+        vehicle: formData.vehicle,
+        style: formData.style,
+        notes: formData.notes
+      });
+    }
+
     saveData();
     form.reset();
     form.closest("dialog").close();
@@ -647,6 +697,23 @@ if (carTable) {
     const car = data.cars[index];
     if (window.confirm(`Delete vehicle "${car.name}"?`)) {
       data.cars.splice(index, 1);
+      saveData();
+      renderAll();
+    }
+  });
+}
+
+if (plateGrid) {
+  plateGrid.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-delete-plate]");
+    if (!button) {
+      return;
+    }
+
+    const index = Number(button.dataset.deletePlate);
+    const plate = data.plates[index];
+    if (window.confirm(`Delete plate "${formatPlateText(plate.text)}"?`)) {
+      data.plates.splice(index, 1);
       saveData();
       renderAll();
     }
