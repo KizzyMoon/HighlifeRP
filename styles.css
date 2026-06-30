@@ -27,8 +27,8 @@ body {
   min-height: 100vh;
   margin: 0;
   background:
-    linear-gradient(110deg, rgba(8, 10, 14, 0.5), rgba(8, 10, 14, 0.22)),
-    url("background-los-santos.svg?v=2");
+    linear-gradient(110deg, rgba(8, 10, 14, 0.42), rgba(8, 10, 14, 0.18)),
+    url("wallpaper-gta-sunset.png?v=1");
   background-attachment: fixed;
   background-position: center;
   background-size: cover;
@@ -102,7 +102,7 @@ button {
 }
 
 .app-shell {
-  width: min(1240px, calc(100% - 285px));
+  width: calc(100% - 245px);
   margin-left: 245px;
   padding: 28px clamp(18px, 3vw, 42px) 54px;
 }
