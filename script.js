@@ -222,6 +222,18 @@ function setupCharacterMaker() {
     pad.addEventListener("keydown", (event) => updatePadFromKeyboard(pad, event));
     updatePadPosition(pad, 0, 0);
   });
+
+  characterMakerForm.querySelectorAll('input[type="range"]').forEach((range) => {
+    const output = characterMakerForm.querySelector(`[data-output-for="${range.name}"]`);
+    const updateOutput = () => {
+      if (output) {
+        output.textContent = range.value;
+      }
+    };
+
+    range.addEventListener("input", updateOutput);
+    updateOutput();
+  });
 }
 
 function clamp(value, min, max) {
