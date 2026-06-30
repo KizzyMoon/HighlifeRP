@@ -27,8 +27,8 @@ body {
   min-height: 100vh;
   margin: 0;
   background:
-    linear-gradient(110deg, rgba(16, 18, 20, 0.9), rgba(16, 18, 20, 0.68)),
-    url("https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&w=1800&q=80");
+    linear-gradient(110deg, rgba(8, 10, 14, 0.76), rgba(8, 10, 14, 0.54)),
+    url("background-los-santos.svg");
   background-attachment: fixed;
   background-position: center;
   background-size: cover;
