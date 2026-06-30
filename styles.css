@@ -862,8 +862,8 @@ output {
 
 .plate-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 320px));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 16px;
   align-items: start;
 }
 
@@ -879,8 +879,8 @@ output {
   position: relative;
   display: grid;
   place-items: center;
-  width: calc(100% - 24px);
-  max-width: 390px;
+  width: calc(100% - 28px);
+  max-width: 460px;
   aspect-ratio: 2.42 / 1;
   margin: 16px auto 12px;
   border: 5px solid #101418;
@@ -919,12 +919,12 @@ output {
 
 .plate-state {
   position: absolute;
-  top: 14px;
-  left: 84px;
-  right: 78px;
+  top: 13px;
+  left: 118px;
+  right: 88px;
   color: #bd171b;
   font-family: "Brush Script MT", "Segoe Script", cursive;
-  font-size: clamp(1.35rem, 5vw, 2.35rem);
+  font-size: clamp(1.08rem, 4vw, 1.62rem);
   font-weight: 900;
   text-align: center;
   text-transform: none;
@@ -934,11 +934,11 @@ output {
 
 .plate-month {
   position: absolute;
-  top: 20px;
+  top: 19px;
   left: 20px;
   color: #0057c8;
   font-family: Arial, Helvetica, sans-serif;
-  font-size: clamp(0.85rem, 3vw, 1.38rem);
+  font-size: clamp(0.84rem, 2.4vw, 1.12rem);
   font-weight: 900;
   letter-spacing: 0;
 }
@@ -965,14 +965,14 @@ output {
 }
 
 .gta-plate strong {
-  margin-top: 44px;
+  margin-top: 42px;
   color: inherit;
   font-family: "Arial Narrow", "Roboto Condensed", "Trebuchet MS", sans-serif;
-  max-width: calc(100% - 24px);
+  max-width: calc(100% - 42px);
   overflow: hidden;
-  font-size: clamp(2.15rem, 8vw, 4.45rem);
+  font-size: clamp(2.55rem, 8vw, 4.15rem);
   font-weight: 500;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   line-height: 1;
   text-align: center;
   text-shadow:
@@ -1177,8 +1177,17 @@ dialog::backdrop {
   .two-col,
   .three-col,
   .pad-grid,
+  .plate-grid,
   .table-tools {
     grid-template-columns: 1fr;
+  }
+
+  .gta-plate strong {
+    font-size: clamp(2rem, 14vw, 3.3rem);
+  }
+
+  .plate-state {
+    font-size: clamp(0.95rem, 6vw, 1.28rem);
   }
 
   .primary-button,
