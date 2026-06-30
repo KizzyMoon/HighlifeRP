@@ -86,6 +86,8 @@ const storageKey = "highlife-database-v2";
 const data = loadData();
 
 const characterGrid = document.querySelector("#characterGrid");
+const characterDetailsDialog = document.querySelector("#characterDetailsDialog");
+const characterDetails = document.querySelector("#characterDetails");
 const paintGrid = document.querySelector("#paintGrid");
 const carTable = document.querySelector("#carTable");
 const carSearch = document.querySelector("#carSearch");
@@ -255,59 +257,138 @@ function renderCounts() {
 
 function renderCharacters() {
   characterGrid.innerHTML = data.characters
-    .map((character) => {
-      const features = character.features || {};
-      const featureSummary = Object.entries(features)
-        .filter(([, value]) => Number(value) !== 0)
-        .map(([key, value]) => `${key}: ${value}`)
-        .join(", ") || "All default / 0";
-
+    .map((character, characterIndex) => {
       return `
-        <article class="character-card">
-          <header>
-            <div>
-              <h3>${escapeHtml(character.name)}</h3>
-              <p>${escapeHtml(character.role)}</p>
-            </div>
-            <p>${escapeHtml(character.model)}</p>
-          </header>
-          <div class="build-grid">
-            ${renderBlock("Heritage", {
-              Mother: character.mother,
-              Father: character.father,
-              Resemblance: `${character.resemblance}%`,
-              "Skin mix": `${character.skinMix}%`
-            })}
-            ${renderBlock("Hair and Colour", {
-              Hair: character.hairStyle,
-              "Hair colour": character.hairColor,
-              Highlight: character.highlightColor,
-              Eyes: character.eyeColor,
-              Eyebrows: character.eyebrows,
-              "Facial hair": character.facialHair
-            })}
-            ${renderBlock("Overlays", {
-              Blemishes: character.blemishes,
-              Ageing: character.ageing,
-              Makeup: character.makeup,
-              "Blush / lipstick": character.blushLipstick,
-              Freckles: character.freckles
-            })}
-            ${renderBlock("Face Features", {
-              Settings: featureSummary
-            })}
-            ${renderBlock("Clothing", {
-              Outfit: character.outfit
-            })}
-            ${renderBlock("Notes", {
-              Voice: character.voice,
-              Creation: character.creation
-            })}
-          </div>
+        <article class="character-tile">
+          <button class="portrait-button" type="button" data-character-index="${characterIndex}" aria-label="View ${escapeHtml(character.name)} settings">
+            ${renderCharacterPortrait(character)}
+          </button>
+          <h3>${escapeHtml(character.name)}</h3>
+          <p>${escapeHtml(character.role)}</p>
         </article>
       `;
     })
     .join("");
+}
+
+function renderCharacterDetails(character) {
+  const features = character.features || {};
+  const featureSummary = Object.entries(features)
+    .filter(([, value]) => Number(value) !== 0)
+    .map(([key, value]) => `${key}: ${value}`)
+    .join(", ") || "All default / 0";
+
+  return `
+    <article class="character-card">
+      <header>
+        <div>
+          <h3>${escapeHtml(character.name)}</h3>
+          <p>${escapeHtml(character.role)}</p>
+        </div>
+        <p>${escapeHtml(character.model)}</p>
+      </header>
+      <div class="character-detail-top">
+        ${renderCharacterPortrait(character)}
+      </div>
+      <div class="build-grid">
+        ${renderBlock("Heritage", {
+          Mother: character.mother,
+          Father: character.father,
+          Resemblance: `${character.resemblance}%`,
+          "Skin mix": `${character.skinMix}%`
+        })}
+        ${renderBlock("Hair and Colour", {
+          Hair: character.hairStyle,
+          "Hair colour": character.hairColor,
+          Highlight: character.highlightColor,
+          Eyes: character.eyeColor,
+          Eyebrows: character.eyebrows,
+          "Facial hair": character.facialHair
+        })}
+        ${renderBlock("Overlays", {
+          Blemishes: character.blemishes,
+          Ageing: character.ageing,
+          Makeup: character.makeup,
+          "Blush / lipstick": character.blushLipstick,
+          Freckles: character.freckles
+        })}
+        ${renderBlock("Face Features", {
+          Settings: featureSummary
+        })}
+        ${renderBlock("Clothing", {
+          Outfit: character.outfit
+        })}
+        ${renderBlock("Notes", {
+          Voice: character.voice,
+          Creation: character.creation
+        })}
+      </div>
+    </article>
+  `;
+}
+
+function renderCharacterPortrait(character) {
+  const skin = getSkinColor(character.skinMix);
+  const hair = colorFromText(character.hairColor || character.hairStyle, "#3b2418");
+  const highlight = colorFromText(character.highlightColor, "#8b5a34");
+  const eyes = colorFromText(character.eyeColor, "#5ea468");
+  const lip = colorFromText(character.blushLipstick || character.makeup, "#b75d68");
+  const feminine = String(character.model || "").includes("_f_");
+  const hairPath = feminine
+    ? "M78 86c2-34 23-54 50-54s48 20 50 54c-10-21-22-29-50-29S88 65 78 86z"
+    : "M82 78c8-30 23-44 46-44s38 14 46 44c-16-13-30-18-46-18s-30 5-46 18z";
+  const shoulder = feminine
+    ? "M50 204c16-31 44-45 78-45s62 14 78 45v22H50z"
+    : "M42 204c18-28 48-43 86-43s68 15 86 43v22H42z";
+
+  return `
+    <svg class="character-portrait" viewBox="0 0 256 300" role="img" aria-label="${escapeHtml(character.name)} preview">
+      <defs>
+        <linearGradient id="portrait-bg-${portraitId(character.name)}" x1="0" x2="1" y1="0" y2="1">
+          <stop offset="0" stop-color="#182638"/>
+          <stop offset="1" stop-color="#0e1318"/>
+        </linearGradient>
+      </defs>
+      <rect width="256" height="300" rx="14" fill="url(#portrait-bg-${portraitId(character.name)})"/>
+      <circle cx="128" cy="116" r="72" fill="rgba(255,255,255,0.05)"/>
+      <path d="${shoulder}" fill="#273342"/>
+      <path d="M94 156h68v40c0 17-15 29-34 29s-34-12-34-29z" fill="${skin}"/>
+      <ellipse cx="128" cy="104" rx="54" ry="66" fill="${skin}"/>
+      <path d="${hairPath}" fill="${hair}"/>
+      <path d="M83 91c10-24 27-38 45-38 20 0 37 13 45 38-15-12-30-17-45-17s-30 5-45 17z" fill="${highlight}" opacity="0.55"/>
+      <ellipse cx="107" cy="113" rx="8" ry="6" fill="#fff"/>
+      <ellipse cx="149" cy="113" rx="8" ry="6" fill="#fff"/>
+      <circle cx="107" cy="113" r="4" fill="${eyes}"/>
+      <circle cx="149" cy="113" r="4" fill="${eyes}"/>
+      <path d="M116 142c8 6 16 6 24 0" fill="none" stroke="${lip}" stroke-width="5" stroke-linecap="round"/>
+      <path d="M98 98c12-7 22-7 31 0M157 98c-12-7-22-7-31 0" fill="none" stroke="${hair}" stroke-width="5" stroke-linecap="round"/>
+      <path d="M128 112c-4 13-7 23-2 31" fill="none" stroke="rgba(86,53,38,0.4)" stroke-width="4" stroke-linecap="round"/>
+    </svg>
+  `;
+}
+
+function portraitId(value) {
+  return String(value || "character").replace(/[^a-z0-9]/gi, "-").toLowerCase();
+}
+
+function getSkinColor(skinMix) {
+  const amount = clamp(Number(skinMix || 50), 0, 100) / 100;
+  const light = [229, 184, 145];
+  const deep = [119, 72, 48];
+  const rgb = light.map((channel, index) => Math.round(channel + (deep[index] - channel) * amount));
+  return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
+}
+
+function colorFromText(value, fallback) {
+  const text = String(value || "").toLowerCase();
+  const swatches = [
+    ["black", "#171311"], ["brown", "#4b2d1f"], ["blonde", "#d9b56f"], ["caramel", "#b8773d"],
+    ["ginger", "#b7552d"], ["red", "#8f2633"], ["blue", "#3479d8"], ["green", "#4f9f68"],
+    ["hazel", "#8b7a3c"], ["grey", "#9aa5aa"], ["gray", "#9aa5aa"], ["white", "#e8e4dc"],
+    ["pink", "#d66b9c"], ["purple", "#7b4bc4"]
+  ];
+  const match = swatches.find(([name]) => text.includes(name));
+  return match ? match[1] : fallback;
 }
 
 function renderBlock(title, rows) {
@@ -427,6 +508,21 @@ characterMakerForm.addEventListener("submit", (event) => {
 document.querySelector("#resetCharacterForm").addEventListener("click", () => {
   characterMakerForm.reset();
   document.querySelectorAll(".feature-pad").forEach((pad) => updatePadPosition(pad, 0, 0));
+});
+
+characterGrid.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-character-index]");
+  if (!button) {
+    return;
+  }
+
+  const character = data.characters[Number(button.dataset.characterIndex)];
+  characterDetails.innerHTML = renderCharacterDetails(character);
+  characterDetailsDialog.showModal();
+});
+
+document.querySelector("#closeCharacterDetails").addEventListener("click", () => {
+  characterDetailsDialog.close();
 });
 
 document.querySelectorAll("[data-open-dialog]").forEach((button) => {

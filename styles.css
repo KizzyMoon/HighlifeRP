@@ -449,7 +449,48 @@ output {
 
 .character-list {
   display: grid;
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 18px;
+}
+
+.character-tile {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.portrait-button {
+  width: 100%;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #11171d;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.portrait-button:hover {
+  border-color: var(--blue);
+  transform: translateY(-2px);
+}
+
+.character-portrait {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+}
+
+.character-tile h3 {
+  margin: 0;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.character-tile p {
+  margin: -6px 0 0;
+  color: var(--muted);
+  text-align: center;
+  font-size: 0.88rem;
 }
 
 .character-card {
@@ -475,6 +516,19 @@ output {
 .character-card p {
   margin: 0;
   color: var(--muted);
+}
+
+.character-detail-top {
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: #11171d;
+}
+
+.character-detail-top .character-portrait {
+  width: min(260px, 100%);
+  border: 1px solid var(--line);
+  border-radius: 8px;
 }
 
 .build-grid {
@@ -598,6 +652,19 @@ dialog {
   background: var(--panel);
   color: var(--ink);
   box-shadow: var(--shadow);
+}
+
+.character-dialog {
+  width: min(1040px, calc(100% - 28px));
+  max-height: 90vh;
+  overflow: auto;
+  padding: 0;
+}
+
+.dialog-shell {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
 }
 
 dialog::backdrop {
