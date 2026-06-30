@@ -294,10 +294,131 @@ output {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.slider-grid {
+.pad-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: 18px;
+  gap: 16px;
+}
+
+.feature-pad-card {
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.pad-card-header {
+  display: grid;
+  gap: 3px;
+}
+
+.pad-card-header strong {
+  color: var(--ink);
+}
+
+.pad-card-header span,
+.pad-values {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.feature-pad {
+  --dot-x: 50%;
+  --dot-y: 50%;
+  position: relative;
+  min-height: 190px;
+  border: 1px solid #60717d;
+  border-radius: 8px;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    radial-gradient(circle at 50% 50%, rgba(102, 199, 255, 0.18), transparent 35%),
+    #10161b;
+  background-size: 25% 25%, 25% 25%, auto, auto;
+  touch-action: none;
+  user-select: none;
+}
+
+.feature-pad:focus {
+  outline: 2px solid var(--blue);
+  outline-offset: 3px;
+}
+
+.pad-cross {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.22);
+  pointer-events: none;
+}
+
+.pad-cross.horizontal {
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+}
+
+.pad-cross.vertical {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+}
+
+.pad-dot {
+  position: absolute;
+  left: var(--dot-x);
+  top: var(--dot-y);
+  width: 18px;
+  height: 18px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 5px rgba(226, 85, 79, 0.2);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.axis-label {
+  position: absolute;
+  color: #dbe7ed;
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+}
+
+.axis-top {
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.axis-right {
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.axis-bottom {
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.axis-left {
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.pad-values {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .maker-actions {
@@ -539,7 +660,7 @@ dialog::backdrop {
 
   .two-col,
   .three-col,
-  .slider-grid,
+  .pad-grid,
   .table-tools {
     grid-template-columns: 1fr;
   }

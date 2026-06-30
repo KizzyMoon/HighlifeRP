@@ -18,6 +18,19 @@ const faceFeatures = [
   "Chin depth", "Chin width", "Chin indent", "Neck width"
 ];
 
+const featurePairs = [
+  { title: "Nose Size", x: "Nose width", y: "Nose peak height", left: "Narrow", right: "Wide", top: "High", bottom: "Low" },
+  { title: "Nose Profile", x: "Nose peak length", y: "Nose bone height", left: "Short", right: "Long", top: "Raised", bottom: "Lowered" },
+  { title: "Nose Tip", x: "Nose peak lowering", y: "Nose bone twist", left: "Upturned", right: "Downturned", top: "Twist left", bottom: "Twist right" },
+  { title: "Brow", x: "Eyebrow height", y: "Eyebrow depth", left: "Lower", right: "Higher", top: "Inward", bottom: "Outward" },
+  { title: "Cheekbones", x: "Cheekbone height", y: "Cheekbone width", left: "Low", right: "High", top: "Narrow", bottom: "Wide" },
+  { title: "Cheeks and Eyes", x: "Cheek depth", y: "Eye size", left: "Sunken", right: "Full", top: "Small eyes", bottom: "Large eyes" },
+  { title: "Lips and Jaw", x: "Lip thickness", y: "Jaw width", left: "Thin lips", right: "Full lips", top: "Narrow jaw", bottom: "Wide jaw" },
+  { title: "Jaw Shape", x: "Jaw shape", y: "Chin height", left: "Round", right: "Square", top: "High chin", bottom: "Low chin" },
+  { title: "Chin Profile", x: "Chin depth", y: "Chin width", left: "Inward", right: "Outward", top: "Narrow", bottom: "Wide" },
+  { title: "Chin and Neck", x: "Chin indent", y: "Neck width", left: "Smooth", right: "Indented", top: "Narrow neck", bottom: "Wide neck" }
+];
+
 const starterData = {
   characters: [
     {
@@ -131,28 +144,107 @@ function setupCharacterMaker() {
   populateSelect(document.querySelector("#motherSelect"), mothers);
   populateSelect(document.querySelector("#fatherSelect"), fathers);
 
-  document.querySelector("#featureSliders").innerHTML = faceFeatures
-    .map((feature) => {
-      const id = feature.toLowerCase().replaceAll(" ", "-");
+  document.querySelector("#featurePads").innerHTML = featurePairs
+    .map((pair) => {
       return `
-        <label>${escapeHtml(feature)} <output data-output-for="${escapeHtml(feature)}">0</output>
-          <input id="${id}" name="feature:${escapeHtml(feature)}" type="range" min="-1" max="1" step="0.1" value="0" />
-        </label>
+        <div class="feature-pad-card">
+          <div class="pad-card-header">
+            <strong>${escapeHtml(pair.title)}</strong>
+            <span>${escapeHtml(pair.x)} / ${escapeHtml(pair.y)}</span>
+          </div>
+          <div
+            class="feature-pad"
+            role="slider"
+            tabindex="0"
+            aria-label="${escapeHtml(pair.title)}"
+            aria-valuetext="${escapeHtml(pair.x)} 0, ${escapeHtml(pair.y)} 0"
+            data-x-feature="${escapeHtml(pair.x)}"
+            data-y-feature="${escapeHtml(pair.y)}"
+            data-x-value="0"
+            data-y-value="0"
+          >
+            <span class="axis-label axis-top">${escapeHtml(pair.top)}</span>
+            <span class="axis-label axis-right">${escapeHtml(pair.right)}</span>
+            <span class="axis-label axis-bottom">${escapeHtml(pair.bottom)}</span>
+            <span class="axis-label axis-left">${escapeHtml(pair.left)}</span>
+            <span class="pad-cross horizontal"></span>
+            <span class="pad-cross vertical"></span>
+            <span class="pad-dot"></span>
+          </div>
+          <div class="pad-values">
+            <span>${escapeHtml(pair.x)}: <output data-pad-x>0</output></span>
+            <span>${escapeHtml(pair.y)}: <output data-pad-y>0</output></span>
+          </div>
+        </div>
       `;
     })
     .join("");
 
-  characterMakerForm.querySelectorAll('input[type="range"]').forEach((range) => {
-    const output = characterMakerForm.querySelector(`[data-output-for="${CSS.escape(range.name.replace("feature:", ""))}"]`)
-      || characterMakerForm.querySelector(`[data-output-for="${CSS.escape(range.name)}"]`);
-    const syncOutput = () => {
-      if (output) {
-        output.textContent = range.value;
-      }
+  document.querySelectorAll(".feature-pad").forEach((pad) => {
+    const startDrag = (event) => {
+      event.preventDefault();
+      pad.setPointerCapture(event.pointerId);
+      updatePadFromPointer(pad, event);
     };
-    range.addEventListener("input", syncOutput);
-    syncOutput();
+
+    pad.addEventListener("pointerdown", startDrag);
+    pad.addEventListener("pointermove", (event) => {
+      if (pad.hasPointerCapture(event.pointerId)) {
+        updatePadFromPointer(pad, event);
+      }
+    });
+    pad.addEventListener("keydown", (event) => updatePadFromKeyboard(pad, event));
+    updatePadPosition(pad, 0, 0);
   });
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function roundFeatureValue(value) {
+  return Math.round(value * 10) / 10;
+}
+
+function updatePadFromPointer(pad, event) {
+  const rect = pad.getBoundingClientRect();
+  const xPercent = clamp((event.clientX - rect.left) / rect.width, 0, 1);
+  const yPercent = clamp((event.clientY - rect.top) / rect.height, 0, 1);
+  const xValue = roundFeatureValue((xPercent * 2) - 1);
+  const yValue = roundFeatureValue((yPercent * 2) - 1);
+  updatePadPosition(pad, xValue, yValue);
+}
+
+function updatePadFromKeyboard(pad, event) {
+  const keys = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home"];
+  if (!keys.includes(event.key)) {
+    return;
+  }
+
+  event.preventDefault();
+  let xValue = Number(pad.dataset.xValue);
+  let yValue = Number(pad.dataset.yValue);
+
+  if (event.key === "ArrowLeft") xValue -= 0.1;
+  if (event.key === "ArrowRight") xValue += 0.1;
+  if (event.key === "ArrowUp") yValue -= 0.1;
+  if (event.key === "ArrowDown") yValue += 0.1;
+  if (event.key === "Home") {
+    xValue = 0;
+    yValue = 0;
+  }
+
+  updatePadPosition(pad, roundFeatureValue(clamp(xValue, -1, 1)), roundFeatureValue(clamp(yValue, -1, 1)));
+}
+
+function updatePadPosition(pad, xValue, yValue) {
+  pad.dataset.xValue = String(xValue);
+  pad.dataset.yValue = String(yValue);
+  pad.style.setProperty("--dot-x", `${((xValue + 1) / 2) * 100}%`);
+  pad.style.setProperty("--dot-y", `${((yValue + 1) / 2) * 100}%`);
+  pad.closest(".feature-pad-card").querySelector("[data-pad-x]").textContent = xValue;
+  pad.closest(".feature-pad-card").querySelector("[data-pad-y]").textContent = yValue;
+  pad.setAttribute("aria-valuetext", `${pad.dataset.xFeature} ${xValue}, ${pad.dataset.yFeature} ${yValue}`);
 }
 
 function renderCounts() {
@@ -309,29 +401,26 @@ characterMakerForm.addEventListener("submit", (event) => {
   const features = {};
 
   formData.forEach((value, key) => {
-    if (key.startsWith("feature:")) {
-      features[key.replace("feature:", "")] = value;
-    } else {
-      character[key] = value;
-    }
+    character[key] = value;
+  });
+
+  document.querySelectorAll(".feature-pad").forEach((pad) => {
+    features[pad.dataset.xFeature] = pad.dataset.xValue;
+    features[pad.dataset.yFeature] = pad.dataset.yValue;
   });
 
   character.features = features;
   data.characters.unshift(character);
   saveData();
   characterMakerForm.reset();
-  characterMakerForm.querySelectorAll('input[type="range"]').forEach((range) => {
-    range.dispatchEvent(new Event("input"));
-  });
+  document.querySelectorAll(".feature-pad").forEach((pad) => updatePadPosition(pad, 0, 0));
   renderAll();
   document.querySelector("#characters").scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
 document.querySelector("#resetCharacterForm").addEventListener("click", () => {
   characterMakerForm.reset();
-  characterMakerForm.querySelectorAll('input[type="range"]').forEach((range) => {
-    range.dispatchEvent(new Event("input"));
-  });
+  document.querySelectorAll(".feature-pad").forEach((pad) => updatePadPosition(pad, 0, 0));
 });
 
 document.querySelectorAll("[data-open-dialog]").forEach((button) => {
