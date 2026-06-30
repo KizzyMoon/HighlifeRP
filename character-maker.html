@@ -152,15 +152,51 @@
           </fieldset>
 
           <fieldset class="form-card">
-            <legend>Hair and Colour</legend>
-            <div class="two-col">
-              <label>Hair style<input name="hairStyle" placeholder="Style ID / name" /></label>
-              <label>Hair colour<input name="hairColor" placeholder="Colour ID / name" /></label>
-              <label>Highlight colour<input name="highlightColor" placeholder="Colour ID / name" /></label>
-              <label>Eye colour<input name="eyeColor" placeholder="Colour ID / name" /></label>
+            <legend>Appearance</legend>
+            <div class="appearance-menu">
+              <label class="appearance-row"><span>Hair</span><input name="hairStyle" placeholder="Style ID / name" /></label>
+              <label class="appearance-row"><span>Eyebrows</span><input name="eyebrows" placeholder="Shape, colour, opacity" /></label>
+              <label class="appearance-row"><span>Facial Hair</span><input name="facialHair" placeholder="Style, colour, opacity" /></label>
+              <label class="appearance-row"><span>Eye Colour</span><input name="eyeColor" placeholder="Colour ID / name" /></label>
             </div>
-            <label>Eyebrows<input name="eyebrows" placeholder="Shape, colour, opacity" /></label>
-            <label>Facial hair<input name="facialHair" placeholder="Style, colour, opacity" /></label>
+
+            <div class="colour-changer" aria-label="Hair colour picker">
+              <div class="colour-title">Hair Colour <output id="hairColorLabel">Dark Brown</output></div>
+              <input id="hairColorInput" name="hairColor" type="hidden" value="Dark Brown" />
+              <div class="colour-strip" data-colour-target="hairColor">
+                <button type="button" class="colour-chip selected" data-colour-name="Black" style="--chip:#171311"></button>
+                <button type="button" class="colour-chip" data-colour-name="Dark Brown" style="--chip:#3b2418"></button>
+                <button type="button" class="colour-chip" data-colour-name="Brown" style="--chip:#6b442c"></button>
+                <button type="button" class="colour-chip" data-colour-name="Caramel" style="--chip:#b8773d"></button>
+                <button type="button" class="colour-chip" data-colour-name="Blonde" style="--chip:#d9b56f"></button>
+                <button type="button" class="colour-chip" data-colour-name="White" style="--chip:#e8e4dc"></button>
+                <button type="button" class="colour-chip" data-colour-name="Ginger" style="--chip:#b7552d"></button>
+                <button type="button" class="colour-chip" data-colour-name="Red" style="--chip:#8f2633"></button>
+                <button type="button" class="colour-chip" data-colour-name="Blue" style="--chip:#3479d8"></button>
+                <button type="button" class="colour-chip" data-colour-name="Green" style="--chip:#4f9f68"></button>
+                <button type="button" class="colour-chip" data-colour-name="Pink" style="--chip:#d66b9c"></button>
+                <button type="button" class="colour-chip" data-colour-name="Purple" style="--chip:#7b4bc4"></button>
+              </div>
+            </div>
+
+            <div class="colour-changer" aria-label="Hair highlight colour picker">
+              <div class="colour-title">Highlight Colour <output id="highlightColorLabel">Caramel</output></div>
+              <input id="highlightColorInput" name="highlightColor" type="hidden" value="Caramel" />
+              <div class="colour-strip" data-colour-target="highlightColor">
+                <button type="button" class="colour-chip" data-colour-name="Black" style="--chip:#171311"></button>
+                <button type="button" class="colour-chip" data-colour-name="Dark Brown" style="--chip:#3b2418"></button>
+                <button type="button" class="colour-chip" data-colour-name="Brown" style="--chip:#6b442c"></button>
+                <button type="button" class="colour-chip selected" data-colour-name="Caramel" style="--chip:#b8773d"></button>
+                <button type="button" class="colour-chip" data-colour-name="Blonde" style="--chip:#d9b56f"></button>
+                <button type="button" class="colour-chip" data-colour-name="White" style="--chip:#e8e4dc"></button>
+                <button type="button" class="colour-chip" data-colour-name="Ginger" style="--chip:#b7552d"></button>
+                <button type="button" class="colour-chip" data-colour-name="Red" style="--chip:#8f2633"></button>
+                <button type="button" class="colour-chip" data-colour-name="Blue" style="--chip:#3479d8"></button>
+                <button type="button" class="colour-chip" data-colour-name="Green" style="--chip:#4f9f68"></button>
+                <button type="button" class="colour-chip" data-colour-name="Pink" style="--chip:#d66b9c"></button>
+                <button type="button" class="colour-chip" data-colour-name="Purple" style="--chip:#7b4bc4"></button>
+              </div>
+            </div>
           </fieldset>
 
           <fieldset class="form-card">

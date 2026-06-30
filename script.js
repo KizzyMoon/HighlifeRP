@@ -163,6 +163,7 @@ function setupCharacterMaker() {
   populateSelect(document.querySelector("#motherSelect"), mothers);
   populateSelect(document.querySelector("#fatherSelect"), fathers);
   setupHeritagePreview();
+  setupColourChangers();
 
   const featurePads = document.querySelector("#featurePads");
   if (!featurePads) {
@@ -255,6 +256,32 @@ function setupHeritagePreview() {
   motherSelect.addEventListener("change", syncParents);
   fatherSelect.addEventListener("change", syncParents);
   syncParents();
+}
+
+function setupColourChangers() {
+  document.querySelectorAll(".colour-strip").forEach((strip) => {
+    const target = strip.dataset.colourTarget;
+    const input = document.querySelector(`#${target}Input`);
+    const label = document.querySelector(`#${target}Label`);
+
+    strip.addEventListener("click", (event) => {
+      const chip = event.target.closest(".colour-chip");
+      if (!chip) {
+        return;
+      }
+
+      strip.querySelectorAll(".colour-chip").forEach((item) => item.classList.remove("selected"));
+      chip.classList.add("selected");
+
+      if (input) {
+        input.value = chip.dataset.colourName;
+      }
+
+      if (label) {
+        label.textContent = chip.dataset.colourName;
+      }
+    });
+  });
 }
 
 function clamp(value, min, max) {
