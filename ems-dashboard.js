@@ -1,8 +1,12 @@
 const STORAGE_KEY = "highlife-ems-dashboard-v1";
 const DEFAULT_SHEET_URL = "https://docs.google.com/spreadsheets/d/1g3XXntoqyA9XMgEcXwq89RyqBUymJCpVbG1vlE4BSPY/edit?gid=1321749468#gid=1321749468";
+const GOOGLE_CLIENT_ID = "PASTE_GOOGLE_CLIENT_ID_HERE";
+const SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets.readonly";
 
 const state = loadState();
 let activeTab = "overview";
+let googleTokenClient = null;
+let googleAccessToken = "";
 
 const els = {
   lastUpdated: document.querySelector("[data-last-updated]"),
@@ -88,7 +92,7 @@ function parseDate(value) {
   if (!raw) return "";
   const direct = new Date(raw);
   if (!Number.isNaN(direct.valueOf())) return direct.toISOString().slice(0, 10);
-  const match = raw.match(/^(\d{1,2})[\/. -](\d{1,2})[\/. -](\d{2,4})$/);
+  const match = raw.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/);
   if (!match) return "";
   const day = Number(match[1]);
   const month = Number(match[2]) - 1;
@@ -112,6 +116,12 @@ function addDays(dateText, amount) {
   if (Number.isNaN(date.valueOf())) return "";
   date.setDate(date.getDate() + amount);
   return date.toISOString().slice(0, 10);
+}
+
+function formatDate(value) {
+  if (!value) return "Not set";
+  const date = new Date(`${value}T00:00`);
+  return Number.isNaN(date.valueOf()) ? value : date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
 
 function normalizeCadet(raw = {}) {
@@ -161,14 +171,17 @@ function normalizeNote(raw = {}) {
 }
 
 function cadetFromRow(row) {
+  const name = pick(row, ["Name", "Cadet", "Cadet Name", "Member", "Employee"]);
+  const callsign = pick(row, ["Callsign", "Call Sign", "Unit", "Radio"]);
+  const startDate = pick(row, ["Start Date", "Join Date", "Date Joined", "Cadet Start", "Hired"]);
   const raText = pick(row, ["RA", "RA Complete", "RA Completed", "Ride Along", "Ridealong", "Ride Along Complete"]);
   return normalizeCadet({
-    name: pick(row, ["Name", "Cadet", "Cadet Name", "Member", "Employee"]),
-    callsign: pick(row, ["Callsign", "Call Sign", "Unit", "Radio"]),
+    name,
+    callsign,
     rank: pick(row, ["Rank", "Position"]) || "Cadet",
     status: pick(row, ["Status", "Current Status"]) || "Active",
     trainer: pick(row, ["Trainer", "Mentor", "Supervisor"]),
-    startDate: pick(row, ["Start Date", "Join Date", "Date Joined", "Cadet Start", "Hired"]),
+    startDate,
     day14Due: pick(row, ["14 Day", "14 Day Due", "14-Day", "14 Day Limit"]),
     day28Due: pick(row, ["28 Day", "28 Day Due", "28-Day", "28 Day Limit"]),
     lastRaDate: pick(row, ["Last RA", "RA Date", "Ride Along Date"]),
@@ -202,8 +215,14 @@ function parseCsv(text) {
   let row = [];
   let field = "";
   let quoted = false;
-  const pushField = () => { row.push(field); field = ""; };
-  const pushRow = () => { if (row.some((value) => String(value).trim())) rows.push(row); row = []; };
+  const pushField = () => {
+    row.push(field);
+    field = "";
+  };
+  const pushRow = () => {
+    if (row.some((value) => String(value).trim())) rows.push(row);
+    row = [];
+  };
 
   for (let index = 0; index < text.length; index += 1) {
     const char = text[index];
@@ -255,24 +274,95 @@ function importRows(rows) {
   alert(`Imported ${cadetRows.length} cadet row(s) and ${memberRows.length} EMS directory row(s).`);
 }
 
-function googleCsvUrl(input) {
+function sheetInfoFromUrl(input) {
   const url = String(input || DEFAULT_SHEET_URL).trim();
   const id = url.match(/\/spreadsheets\/d\/([^/]+)/)?.[1];
   const gid = url.match(/[?#&]gid=(\d+)/)?.[1] || "0";
-  if (!id) return url;
+  if (!id) throw new Error("That does not look like a Google Sheets link.");
+  return { id, gid };
+}
+
+function googleCsvUrl(input) {
+  const { id, gid } = sheetInfoFromUrl(input);
   return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`;
 }
 
+function waitForGoogleIdentity() {
+  return new Promise((resolve, reject) => {
+    const started = Date.now();
+    const tick = () => {
+      if (window.google?.accounts?.oauth2) return resolve();
+      if (Date.now() - started > 8000) return reject(new Error("Google sign-in did not load. Check your connection or content blockers."));
+      setTimeout(tick, 100);
+    };
+    tick();
+  });
+}
+
+async function ensureGoogleAccessToken() {
+  if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === "PASTE_GOOGLE_CLIENT_ID_HERE") {
+    throw new Error("Google sign-in needs a Google OAuth Client ID added to ems-dashboard.js first.");
+  }
+  if (googleAccessToken) return googleAccessToken;
+  await waitForGoogleIdentity();
+  return new Promise((resolve, reject) => {
+    googleTokenClient = googleTokenClient || google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: SHEETS_SCOPE
+    });
+    googleTokenClient.callback = (response) => {
+      if (response.error) return reject(new Error(response.error_description || response.error));
+      googleAccessToken = response.access_token || "";
+      if (!googleAccessToken) return reject(new Error("Google did not return an access token."));
+      resolve(googleAccessToken);
+    };
+    googleTokenClient.requestAccessToken({ prompt: "consent" });
+  });
+}
+
+async function fetchSheetJson(url) {
+  const token = await ensureGoogleAccessToken();
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (response.status === 401 || response.status === 403) {
+    googleAccessToken = "";
+    throw new Error("Your Google account does not have access to this sheet, or permission expired.");
+  }
+  if (!response.ok) throw new Error(`Google Sheets returned ${response.status}.`);
+  return response.json();
+}
+
+function rowsFromValues(values = []) {
+  const headers = (values[0] || []).map((header, index) => String(header || `Column ${index + 1}`).trim());
+  return values.slice(1).map((row) => Object.fromEntries(headers.map((header, index) => [header, row[index] || ""])));
+}
+
+async function importPrivateGoogleSheet() {
+  const { id, gid } = sheetInfoFromUrl(els.googleUrl.value);
+  const metadata = await fetchSheetJson(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(id)}?fields=sheets.properties(sheetId,title)`);
+  const sheet = (metadata.sheets || []).find((entry) => String(entry.properties?.sheetId) === String(gid)) || metadata.sheets?.[0];
+  const title = sheet?.properties?.title;
+  if (!title) throw new Error("Could not find that sheet tab.");
+  const range = encodeURIComponent(`'${title.replace(/'/g, "''")}'`);
+  const values = await fetchSheetJson(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(id)}/values/${range}?majorDimension=ROWS`);
+  importRows(rowsFromValues(values.values || []));
+}
+
 async function importGoogleSheet() {
-  const url = googleCsvUrl(els.googleUrl.value);
   try {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`Google returned ${response.status}`);
-    const text = await response.text();
-    if (/html|doctype|sign in/i.test(text.slice(0, 300))) throw new Error("The sheet did not return CSV. It may need to be shared or published.");
-    importRows(parseCsv(text));
-  } catch (error) {
-    alert(`Could not import the Google Sheet automatically.\n\n${error.message}\n\nUse File > Download > CSV in Google Sheets, then upload it here.`);
+    await importPrivateGoogleSheet();
+  } catch (privateError) {
+    try {
+      const url = googleCsvUrl(els.googleUrl.value);
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`Google returned ${response.status}`);
+      const text = await response.text();
+      if (/html|doctype|sign in/i.test(text.slice(0, 300))) throw new Error("The sheet did not return CSV. It may need to be shared or published.");
+      importRows(parseCsv(text));
+    } catch (publicError) {
+      alert(`Could not sync the Google Sheet.\n\nGoogle sign-in: ${privateError.message}\nPublic CSV fallback: ${publicError.message}\n\nUse File > Download > CSV in Google Sheets, then upload it here if needed.`);
+    }
   }
 }
 
@@ -532,6 +622,14 @@ function exportAll() {
 
 document.addEventListener("click", async (event) => {
   const action = event.target.closest("[data-action]")?.dataset.action;
+  if (action === "google-sign-in") {
+    try {
+      await ensureGoogleAccessToken();
+      alert("Google sign-in connected. You can now sync the sheet.");
+    } catch (error) {
+      alert(error.message);
+    }
+  }
   if (action === "import-google") importGoogleSheet();
   if (action === "import-file") {
     const file = els.csvFile.files?.[0];
@@ -577,6 +675,7 @@ document.addEventListener("click", async (event) => {
 
 els.search.addEventListener("input", render);
 els.statusFilter.addEventListener("change", render);
+
 els.dialogForm.addEventListener("submit", (event) => {
   if (event.submitter?.value === "save") saveDialog();
 });
