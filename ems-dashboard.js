@@ -1,6 +1,6 @@
 const STORAGE_KEY = "highlife-ems-dashboard-v1";
 const DEFAULT_SHEET_URL = "https://docs.google.com/spreadsheets/d/1g3XXntoqyA9XMgEcXwq89RyqBUymJCpVbG1vlE4BSPY/edit?gid=1321749468#gid=1321749468";
-const GOOGLE_CLIENT_ID = "PASTE_GOOGLE_CLIENT_ID_HERE";
+const GOOGLE_CLIENT_ID = "210656397822-druudgp358pepcj342slktvmfj5f9ok2.apps.googleusercontent.com";
 const SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets.readonly";
 
 const state = loadState();
