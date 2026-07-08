@@ -1,0 +1,395 @@
+:root {
+  color-scheme: light;
+  --bg: #f5f7fb;
+  --panel: #ffffff;
+  --ink: #172033;
+  --muted: #647084;
+  --line: #d9e0eb;
+  --brand: #176b87;
+  --brand-dark: #0f4b60;
+  --good: #1c7c54;
+  --warn: #b46b00;
+  --bad: #b42318;
+  --soft: #edf6f8;
+  --shadow: 0 10px 30px rgba(23, 32, 51, 0.08);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  padding: 10px 13px;
+}
+
+button:hover { border-color: var(--brand); }
+
+button.primary,
+.hero-actions button:first-child {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+.app {
+  width: min(1480px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 24px 0 48px;
+}
+
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #123648, #176b87);
+  color: #fff;
+  box-shadow: var(--shadow);
+}
+
+.hero p,
+.hero h1 {
+  margin: 0;
+}
+
+.hero p {
+  color: rgba(255, 255, 255, 0.76);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  margin-top: 4px;
+  font-size: clamp(28px, 4vw, 46px);
+  line-height: 1.05;
+}
+
+.hero span {
+  display: block;
+  margin-top: 10px;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.hero-actions,
+.tabs,
+.filters,
+.source-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: end;
+}
+
+.hero-actions button {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #fff;
+}
+
+.source-panel,
+.filters,
+.tabs,
+.stats,
+.view {
+  margin-top: 18px;
+}
+
+.source-panel,
+.filters {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+input,
+select,
+textarea {
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  padding: 9px 11px;
+}
+
+textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.source-panel label:first-child {
+  flex: 1 1 460px;
+}
+
+.filters input {
+  flex: 1 1 260px;
+}
+
+.tabs button.active {
+  background: var(--brand-dark);
+  border-color: var(--brand-dark);
+  color: #fff;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.stat,
+.panel,
+.card,
+.note-row,
+.directory-row {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.stat {
+  padding: 16px;
+}
+
+.stat span {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.stat strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 30px;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.panel {
+  padding: 16px;
+}
+
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.panel-head h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.panel-head span {
+  min-width: 34px;
+  border-radius: 999px;
+  background: var(--soft);
+  color: var(--brand-dark);
+  font-weight: 800;
+  text-align: center;
+  padding: 5px 9px;
+}
+
+.stack {
+  display: grid;
+  gap: 10px;
+}
+
+.cadet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.card h3,
+.card p {
+  margin: 0;
+}
+
+.card h3 {
+  font-size: 18px;
+}
+
+.meta,
+.pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pill {
+  border-radius: 999px;
+  background: #eef2f7;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 5px 8px;
+}
+
+.pill.good { background: #e7f6ee; color: var(--good); }
+.pill.warn { background: #fff4df; color: var(--warn); }
+.pill.bad { background: #fff0ee; color: var(--bad); }
+
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.card-actions button {
+  padding: 8px 10px;
+}
+
+.directory,
+.notes-list {
+  display: grid;
+  gap: 8px;
+}
+
+.directory-row,
+.note-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) minmax(90px, 130px) minmax(120px, 180px) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  box-shadow: none;
+}
+
+.note-row {
+  grid-template-columns: minmax(160px, 240px) minmax(0, 1fr) auto;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.empty {
+  padding: 22px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.is-hidden {
+  display: none !important;
+}
+
+dialog {
+  width: min(720px, calc(100% - 24px));
+  border: 0;
+  border-radius: 8px;
+  padding: 0;
+  box-shadow: 0 24px 80px rgba(23, 32, 51, 0.28);
+}
+
+dialog::backdrop {
+  background: rgba(23, 32, 51, 0.4);
+}
+
+dialog form {
+  display: grid;
+  gap: 14px;
+  padding: 22px;
+}
+
+dialog h2 {
+  margin: 0;
+}
+
+.close {
+  justify-self: end;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.full {
+  grid-column: 1 / -1;
+}
+
+menu {
+  display: flex;
+  justify-content: end;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+}
+
+@media (max-width: 860px) {
+  .hero,
+  .columns {
+    grid-template-columns: 1fr;
+  }
+
+  .hero {
+    display: grid;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .directory-row,
+  .note-row,
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
