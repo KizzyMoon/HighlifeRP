@@ -32,6 +32,7 @@
           <option value="needs-training">Needs day training</option>
         </select>
         <button data-action="import-google" type="button">Sync Sheet</button>
+        <button data-action="google-sign-in" type="button">Google Sign In</button>
         <button data-action="paste-csv" type="button">Paste CSV</button>
         <button data-action="add-cadet" type="button">New Cadet</button>
         <button data-action="add-member" type="button">New EMS</button>
@@ -121,6 +122,7 @@
       </form>
     </dialog>
 
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="ems-dashboard.js"></script>
   </body>
 </html>
