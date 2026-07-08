@@ -84,12 +84,23 @@ function pick(row, aliases) {
 function boolValue(value) {
   const text = String(value || "").trim().toLowerCase();
   if (!text) return false;
+  const number = Number(text);
+  if (!Number.isNaN(number)) return number > 0;
   return ["yes", "y", "true", "done", "complete", "completed", "passed", "trained", "1"].includes(text);
 }
 
 function parseDate(value) {
   const raw = String(value || "").trim();
   if (!raw) return "";
+  const monthOnly = raw.match(/^(\d{1,2})\s+([A-Za-z]{3,})$/);
+  if (monthOnly) {
+    const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+    const month = months.indexOf(monthOnly[2].slice(0, 3).toLowerCase());
+    if (month >= 0) {
+      const date = new Date(new Date().getFullYear(), month, Number(monthOnly[1]));
+      return Number.isNaN(date.valueOf()) ? "" : date.toISOString().slice(0, 10);
+    }
+  }
   const direct = new Date(raw);
   if (!Number.isNaN(direct.valueOf())) return direct.toISOString().slice(0, 10);
   const match = raw.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/);
@@ -130,6 +141,7 @@ function normalizeCadet(raw = {}) {
   const day28Due = parseDate(raw.day28Due || raw.twentyEightDayDue || raw["28day"]) || addDays(startDate, 28);
   return {
     id: raw.id || crypto.randomUUID(),
+    employeeNumber: raw.employeeNumber || "",
     name: raw.name || "",
     callsign: raw.callsign || "",
     rank: raw.rank || "Cadet",
@@ -171,19 +183,21 @@ function normalizeNote(raw = {}) {
 }
 
 function cadetFromRow(row) {
-  const name = pick(row, ["Name", "Cadet", "Cadet Name", "Member", "Employee"]);
+  const name = pick(row, ["Name", "Cadet", "Cadet Name"]);
   const callsign = pick(row, ["Callsign", "Call Sign", "Unit", "Radio"]);
   const startDate = pick(row, ["Start Date", "Join Date", "Date Joined", "Cadet Start", "Hired"]);
-  const raText = pick(row, ["RA", "RA Complete", "RA Completed", "Ride Along", "Ridealong", "Ride Along Complete"]);
+  const raText = pick(row, ["FTO RA's", "FTO RAs", "Unique FTO RA's", "Unique FTO RAs", "RA", "RA Complete", "RA Completed", "Ride Along", "Ridealong", "Ride Along Complete"]);
+  const loa = pick(row, ["LOA", "Leave"]);
   return normalizeCadet({
+    employeeNumber: pick(row, ["Employee Number", "Employee #", "Employee ID", "ID"]),
     name,
     callsign,
     rank: pick(row, ["Rank", "Position"]) || "Cadet",
-    status: pick(row, ["Status", "Current Status"]) || "Active",
+    status: pick(row, ["Status", "Current Status"]) || (loa && loa !== "-" ? "LOA" : "Active"),
     trainer: pick(row, ["Trainer", "Mentor", "Supervisor"]),
     startDate,
-    day14Due: pick(row, ["14 Day", "14 Day Due", "14-Day", "14 Day Limit"]),
-    day28Due: pick(row, ["28 Day", "28 Day Due", "28-Day", "28 Day Limit"]),
+    day14Due: pick(row, ["14 Day", "14 Day Due", "14-Day", "14 Day Limit", "14 day limit"]),
+    day28Due: pick(row, ["28 Day", "28 Day Due", "28-Day", "28 Day Limit", "28 day limit"]),
     lastRaDate: pick(row, ["Last RA", "RA Date", "Ride Along Date"]),
     raCompleted: boolValue(raText),
     day1: boolValue(pick(row, ["Day 1", "Day One", "D1", "Day 1 Trained"])),
@@ -196,7 +210,7 @@ function cadetFromRow(row) {
 
 function memberFromRow(row) {
   return normalizeMember({
-    name: pick(row, ["Name", "Member", "EMS Name", "Employee"]),
+    name: pick(row, ["Name", "Member", "EMS Name"]),
     callsign: pick(row, ["Callsign", "Call Sign", "Unit", "Radio"]),
     rank: pick(row, ["Rank", "Position"]),
     role: pick(row, ["Role", "Department", "Division"]) || "EMS",
@@ -207,7 +221,7 @@ function memberFromRow(row) {
 
 function looksLikeCadet(row) {
   const text = Object.entries(row).map(([key, value]) => `${key} ${value}`).join(" ").toLowerCase();
-  return text.includes("cadet") || text.includes("day 1") || text.includes("day 2") || text.includes("ride") || text.includes("ra");
+  return text.includes("employee number") || text.includes("hiring date") || text.includes("14 day limit") || text.includes("28 day limit") || text.includes("cadet") || text.includes("day 1") || text.includes("day 2") || text.includes("ride") || text.includes("ra");
 }
 
 function parseCsv(text) {
@@ -245,8 +259,7 @@ function parseCsv(text) {
   pushField();
   pushRow();
 
-  const headers = rows.shift()?.map((header) => String(header || "").trim()) || [];
-  return rows.map((values) => Object.fromEntries(headers.map((header, index) => [header || `Column ${index + 1}`, values[index] || ""])));
+  return rowsToObjects(rows);
 }
 
 function mergeByName(existing, incoming, normalizer) {
@@ -259,6 +272,15 @@ function mergeByName(existing, incoming, normalizer) {
   return [...map.values()].sort((a, b) => String(a.name).localeCompare(String(b.name)));
 }
 
+function replaceByName(existing, incoming, normalizer) {
+  const previous = new Map(existing.map((entry) => [`${normalizeKey(entry.name)}:${normalizeKey(entry.callsign)}`, entry]));
+  return incoming.map(normalizer).filter((entry) => entry.name || entry.callsign).map((item) => {
+    const key = `${normalizeKey(item.name)}:${normalizeKey(item.callsign)}`;
+    const match = previous.get(key);
+    return match ? { ...match, ...item, id: match.id, notes: match.notes || item.notes } : item;
+  }).sort((a, b) => String(a.name).localeCompare(String(b.name)));
+}
+
 function importRows(rows) {
   const cadetRows = [];
   const memberRows = [];
@@ -266,8 +288,8 @@ function importRows(rows) {
     if (looksLikeCadet(row)) cadetRows.push(cadetFromRow(row));
     memberRows.push(memberFromRow(row));
   }
-  state.cadets = mergeByName(state.cadets, cadetRows, normalizeCadet);
-  state.members = mergeByName(state.members, memberRows, normalizeMember);
+  state.cadets = cadetRows.length ? replaceByName(state.cadets, cadetRows, normalizeCadet) : state.cadets;
+  state.members = memberRows.length ? replaceByName(state.members, memberRows, normalizeMember) : state.members;
   state.lastUpdated = new Date().toISOString();
   saveState();
   render();
@@ -334,8 +356,39 @@ async function fetchSheetJson(url) {
 }
 
 function rowsFromValues(values = []) {
-  const headers = (values[0] || []).map((header, index) => String(header || `Column ${index + 1}`).trim());
-  return values.slice(1).map((row) => Object.fromEntries(headers.map((header, index) => [header, row[index] || ""])));
+  return rowsToObjects(values);
+}
+
+function headerScore(row = []) {
+  const text = row.map(normalizeKey);
+  const has = (label) => text.includes(normalizeKey(label));
+  let score = 0;
+  if (has("Employee Number")) score += 4;
+  if (has("Callsign")) score += 4;
+  if (has("Name")) score += 4;
+  if (has("Hiring Date")) score += 3;
+  if (has("14 day limit")) score += 3;
+  if (has("28 day limit")) score += 3;
+  if (has("Day 1")) score += 2;
+  if (has("Day 2")) score += 2;
+  if (has("FTO RA's") || has("Unique FTO RA's")) score += 2;
+  return score;
+}
+
+function rowsToObjects(values = []) {
+  if (!values.length) return [];
+  const headerIndex = values.slice(0, 15).reduce((best, row, index) => headerScore(row) > headerScore(values[best] || []) ? index : best, 0);
+  const seen = new Map();
+  const headers = (values[headerIndex] || []).map((header, index) => {
+    const base = String(header || `Column ${index + 1}`).trim();
+    const key = normalizeKey(base);
+    const count = seen.get(key) || 0;
+    seen.set(key, count + 1);
+    return count ? `${base} ${index + 1}` : base;
+  });
+  return values.slice(headerIndex + 1)
+    .filter((row) => row.some((value) => String(value || "").trim()))
+    .map((row) => Object.fromEntries(headers.map((header, index) => [header, row[index] || ""])));
 }
 
 async function importPrivateGoogleSheet() {
@@ -408,7 +461,7 @@ function cadetCard(cadet) {
       <div class="card-head">
         <div>
           <h3>${escapeHtml(cadet.name || "Unnamed cadet")}</h3>
-          <p class="muted">${escapeHtml(cadet.callsign || "No callsign")} ${cadet.rank ? `- ${escapeHtml(cadet.rank)}` : ""}</p>
+          <p class="muted">${escapeHtml([cadet.callsign || "No callsign", cadet.employeeNumber ? `#${cadet.employeeNumber}` : "", cadet.rank].filter(Boolean).join(" - "))}</p>
         </div>
         ${pill(cadet.status || "Active", String(cadet.status).toLowerCase().includes("active") ? "good" : "warn")}
       </div>
