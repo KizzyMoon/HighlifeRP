@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>EMS Cadet Dashboard</title>
+    <link rel="stylesheet" href="ems-dashboard.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="hero">
+        <div>
+          <p>Highlife EMS</p>
+          <h1>EMS Cadet Dashboard</h1>
+          <span data-last-updated>No imports yet</span>
+        </div>
+        <div class="hero-actions">
+          <button data-action="import-google" type="button">Import Google Sheet</button>
+          <button data-action="export-notes" type="button">Export Notes</button>
+          <button data-action="export-all" type="button">Export All</button>
+        </div>
+      </header>
+
+      <section class="source-panel">
+        <label>
+          Main Google Sheet
+          <input data-google-url value="https://docs.google.com/spreadsheets/d/1g3XXntoqyA9XMgEcXwq89RyqBUymJCpVbG1vlE4BSPY/edit?gid=1321749468#gid=1321749468" />
+        </label>
+        <label>
+          CSV upload
+          <input data-csv-file type="file" accept=".csv,.tsv,text/csv,text/tab-separated-values" />
+        </label>
+        <button data-action="import-file" type="button">Import File</button>
+        <button data-action="paste-csv" type="button">Paste CSV</button>
+      </section>
+
+      <section class="stats" data-stats></section>
+
+      <section class="tabs" aria-label="Dashboard sections">
+        <button class="active" data-tab="overview" type="button">Overview</button>
+        <button data-tab="cadets" type="button">Cadets</button>
+        <button data-tab="directory" type="button">EMS Directory</button>
+        <button data-tab="notes" type="button">Notes</button>
+      </section>
+
+      <section class="filters">
+        <input data-search type="search" placeholder="Search names, callsigns, notes..." />
+        <select data-status-filter>
+          <option value="all">All statuses</option>
+          <option value="active">Active</option>
+          <option value="needs-ra">Needs RA</option>
+          <option value="limit-risk">14/28 day risk</option>
+          <option value="needs-training">Needs day training</option>
+        </select>
+        <button data-action="add-cadet" type="button">Add Cadet</button>
+        <button data-action="add-member" type="button">Add EMS</button>
+      </section>
+
+      <section class="view" data-view="overview">
+        <div class="columns">
+          <article class="panel">
+            <div class="panel-head">
+              <h2>Needs RA From Me</h2>
+              <span data-count-needs-ra>0</span>
+            </div>
+            <div data-needs-ra-list class="stack"></div>
+          </article>
+          <article class="panel">
+            <div class="panel-head">
+              <h2>14 / 28 Day Limits</h2>
+              <span data-count-limits>0</span>
+            </div>
+            <div data-limit-list class="stack"></div>
+          </article>
+        </div>
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Cadets To Work With</h2>
+            <span data-count-work>0</span>
+          </div>
+          <div data-work-list class="cadet-grid"></div>
+        </article>
+      </section>
+
+      <section class="view is-hidden" data-view="cadets">
+        <div class="cadet-grid" data-cadet-grid></div>
+      </section>
+
+      <section class="view is-hidden" data-view="directory">
+        <article class="panel">
+          <div class="panel-head">
+            <h2>All EMS Names & Callsigns</h2>
+            <span data-directory-count>0</span>
+          </div>
+          <div class="directory" data-directory></div>
+        </article>
+      </section>
+
+      <section class="view is-hidden" data-view="notes">
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Notes To Add Back To Sheets</h2>
+            <span data-notes-count>0</span>
+          </div>
+          <div class="notes-list" data-notes-list></div>
+        </article>
+      </section>
+    </main>
+
+    <dialog data-dialog>
+      <form method="dialog" data-dialog-form>
+        <button class="close" value="cancel" type="submit">x</button>
+        <h2 data-dialog-title></h2>
+        <div data-dialog-body></div>
+        <menu>
+          <button value="cancel" type="submit">Cancel</button>
+          <button class="primary" value="save" type="submit">Save</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <script src="ems-dashboard.js"></script>
+  </body>
+</html>
