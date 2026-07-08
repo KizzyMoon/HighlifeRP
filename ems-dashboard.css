@@ -255,20 +255,21 @@ label {
 
 .cadet-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 8px;
 }
 
 .card {
   display: grid;
-  gap: 11px;
-  padding: 14px 16px;
+  gap: 8px;
+  padding: 10px 12px;
 }
 
 .card-head {
   display: flex;
+  align-items: start;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
 }
 
 .card h3,
@@ -278,27 +279,35 @@ label {
 
 .card h3 {
   color: #fff;
-  font-size: 1rem;
+  font-size: 0.94rem;
+  line-height: 1.15;
 }
 
 .muted {
   color: var(--muted);
+  font-size: 0.9rem;
 }
 
 .pill-row,
 .card-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
+  gap: 5px;
 }
 
 .pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 20px;
   border-radius: 999px;
   background: #26304a;
   color: #a9c6ff;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 900;
-  padding: 4px 8px;
+  line-height: 1;
+  padding: 3px 7px;
+  white-space: nowrap;
 }
 
 .pill.good { background: rgba(35, 230, 138, 0.16); color: var(--green); }
@@ -306,8 +315,9 @@ label {
 .pill.bad { background: rgba(255, 92, 103, 0.18); color: #ff7d87; }
 
 .card-actions button {
-  min-height: 29px;
-  padding: 5px 9px;
+  min-height: 26px;
+  padding: 4px 8px;
+  font-size: 0.84rem;
 }
 
 .directory-row,
