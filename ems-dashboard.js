@@ -1,5 +1,7 @@
 const STORAGE_KEY = "highlife-ems-dashboard-v1";
 const DEFAULT_SHEET_URL = "https://docs.google.com/spreadsheets/d/1g3XXntoqyA9XMgEcXwq89RyqBUymJCpVbG1vlE4BSPY/edit?gid=1321749468#gid=1321749468";
+const DEFAULT_ROSTER_URL = "https://docs.google.com/spreadsheets/d/1b9RV4HZh2Klex6jEq8YarlpzpDMt0F4ohV_GscHbSb8/edit?gid=647224122#gid=647224122";
+const DEFAULT_MY_CALLSIGN = "M3-18";
 const GOOGLE_CLIENT_ID = "210656397822-druudgp358pepcj342slktvmfj5f9ok2.apps.googleusercontent.com";
 const SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets.readonly";
 
@@ -12,6 +14,7 @@ const els = {
   lastUpdated: document.querySelector("[data-last-updated]"),
   stats: document.querySelector("[data-stats]"),
   googleUrl: document.querySelector("[data-google-url]"),
+  rosterUrl: document.querySelector("[data-roster-url]"),
   csvFile: document.querySelector("[data-csv-file]"),
   search: document.querySelector("[data-search]"),
   statusFilter: document.querySelector("[data-status-filter]"),
@@ -31,7 +34,9 @@ const els = {
   dialog: document.querySelector("[data-dialog]"),
   dialogForm: document.querySelector("[data-dialog-form]"),
   dialogTitle: document.querySelector("[data-dialog-title]"),
-  dialogBody: document.querySelector("[data-dialog-body]")
+  dialogBody: document.querySelector("[data-dialog-body]"),
+  myCallsign: document.querySelector("[data-my-callsign]"),
+  settingsSummary: document.querySelector("[data-settings-summary]")
 };
 
 function loadState() {
@@ -41,10 +46,11 @@ function loadState() {
       cadets: Array.isArray(saved.cadets) ? saved.cadets.map(normalizeCadet) : [],
       members: Array.isArray(saved.members) ? saved.members.map(normalizeMember) : [],
       notes: Array.isArray(saved.notes) ? saved.notes.map(normalizeNote) : [],
+      settings: normalizeSettings(saved.settings),
       lastUpdated: saved.lastUpdated || ""
     };
   } catch {
-    return { cadets: [], members: [], notes: [], lastUpdated: "" };
+    return { cadets: [], members: [], notes: [], settings: normalizeSettings(), lastUpdated: "" };
   }
 }
 
@@ -66,8 +72,18 @@ function normalizeKey(value) {
   return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
+function normalizeCallsign(value) {
+  return String(value || "").trim().toUpperCase().replace(/\s+/g, "");
+}
+
+function normalizeSettings(raw = {}) {
+  return {
+    myCallsign: normalizeCallsign(raw.myCallsign || DEFAULT_MY_CALLSIGN)
+  };
+}
+
 function pick(row, aliases) {
-  const keys = Object.keys(row);
+  const keys = Object.keys(row).filter((key) => !key.startsWith("__"));
   for (const alias of aliases) {
     const target = normalizeKey(alias);
     const found = keys.find((key) => normalizeKey(key) === target);
@@ -152,6 +168,7 @@ function normalizeCadet(raw = {}) {
     day28Due,
     lastRaDate: parseDate(raw.lastRaDate || raw.lastRA || raw.raDate),
     raCompleted: Boolean(raw.raCompleted),
+    myRaCompleted: Boolean(raw.myRaCompleted),
     day1: Boolean(raw.day1),
     day2: Boolean(raw.day2),
     needsWork: raw.needsWork || "",
@@ -163,9 +180,14 @@ function normalizeCadet(raw = {}) {
 function normalizeMember(raw = {}) {
   return {
     id: raw.id || crypto.randomUUID(),
+    employeeNumber: raw.employeeNumber || "",
     name: raw.name || "",
     callsign: raw.callsign || "",
     rank: raw.rank || "",
+    steamName: raw.steamName || "",
+    discordId: raw.discordId || "",
+    timezone: raw.timezone || "",
+    tags: Array.isArray(raw.tags) ? raw.tags.filter(Boolean) : [],
     role: raw.role || raw.department || "EMS",
     status: raw.status || "Active",
     notes: raw.notes || ""
@@ -210,10 +232,15 @@ function cadetFromRow(row) {
 
 function memberFromRow(row) {
   return normalizeMember({
+    employeeNumber: pick(row, ["Employee Number", "Employee #", "Employee ID", "ID"]),
     name: pick(row, ["Name", "Member", "EMS Name"]),
     callsign: pick(row, ["Callsign", "Call Sign", "Unit", "Radio"]),
     rank: pick(row, ["Rank", "Position"]),
+    steamName: pick(row, ["Steam Name", "Steam"]),
+    discordId: pick(row, ["Discord ID", "Discord"]),
+    timezone: pick(row, ["Timezone", "Time Zone", "TZ"]),
     role: pick(row, ["Role", "Department", "Division"]) || "EMS",
+    tags: row.__roleTags || [],
     status: pick(row, ["Status", "Current Status"]) || "Active",
     notes: pick(row, ["Notes", "Comment"])
   });
@@ -281,19 +308,43 @@ function replaceByName(existing, incoming, normalizer) {
   }).sort((a, b) => String(a.name).localeCompare(String(b.name)));
 }
 
+function memberKey(member) {
+  return normalizeKey(member.employeeNumber || "") || `${normalizeKey(member.name)}:${normalizeKey(member.callsign)}`;
+}
+
+function replaceMembers(existing, incoming) {
+  const previous = new Map(existing.map((entry) => [memberKey(entry), entry]));
+  const unique = new Map();
+  for (const item of incoming.map(normalizeMember).filter((entry) => entry.name || entry.callsign || entry.employeeNumber)) {
+    const key = memberKey(item);
+    const match = previous.get(key);
+    unique.set(key, match ? { ...match, ...item, id: match.id, notes: match.notes || item.notes } : item);
+  }
+  return [...unique.values()].sort((a, b) => {
+    const callCompare = String(a.callsign || "").localeCompare(String(b.callsign || ""), undefined, { numeric: true });
+    return callCompare || String(a.name).localeCompare(String(b.name));
+  });
+}
+
 function importRows(rows) {
   const cadetRows = [];
-  const memberRows = [];
   for (const row of rows) {
     if (looksLikeCadet(row)) cadetRows.push(cadetFromRow(row));
-    memberRows.push(memberFromRow(row));
   }
   state.cadets = cadetRows.length ? replaceByName(state.cadets, cadetRows, normalizeCadet) : state.cadets;
-  state.members = memberRows.length ? replaceByName(state.members, memberRows, normalizeMember) : state.members;
   state.lastUpdated = new Date().toISOString();
   saveState();
   render();
-  alert(`Imported ${cadetRows.length} cadet row(s) and ${memberRows.length} EMS directory row(s).`);
+  return cadetRows.length;
+}
+
+function importRosterRows(rows) {
+  const memberRows = rows.map(memberFromRow).filter((member) => member.name || member.callsign || member.employeeNumber);
+  state.members = replaceMembers(state.members, memberRows);
+  state.lastUpdated = new Date().toISOString();
+  saveState();
+  render();
+  return memberRows.length;
 }
 
 function sheetInfoFromUrl(input) {
@@ -355,8 +406,56 @@ async function fetchSheetJson(url) {
   return response.json();
 }
 
+async function sheetTitleFromInfo(id, gid) {
+  const metadata = await fetchSheetJson(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(id)}?fields=sheets.properties(sheetId,title)`);
+  const sheet = (metadata.sheets || []).find((entry) => String(entry.properties?.sheetId) === String(gid)) || metadata.sheets?.[0];
+  const title = sheet?.properties?.title;
+  if (!title) throw new Error("Could not find that sheet tab.");
+  return title;
+}
+
+async function sheetMetadata(id) {
+  return fetchSheetJson(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(id)}?fields=sheets.properties(sheetId,title)`);
+}
+
+function findSheetTitle(sheets = [], gid) {
+  const sheet = sheets.find((entry) => String(entry.properties?.sheetId) === String(gid)) || sheets[0];
+  const title = sheet?.properties?.title;
+  if (!title) throw new Error("Could not find that sheet tab.");
+  return title;
+}
+
+function sheetRange(title, range = "A1:Z220") {
+  return `'${String(title).replace(/'/g, "''")}'!${range}`;
+}
+
+async function applyMyRaFromCadetTabs(spreadsheetId, sheets = []) {
+  const myCallsign = normalizeCallsign(state.settings?.myCallsign);
+  if (!myCallsign) return;
+  const titles = new Set(sheets.map((entry) => entry.properties?.title).filter(Boolean));
+  const targets = state.cadets
+    .filter((cadet) => cadet.callsign && titles.has(cadet.callsign))
+    .map((cadet) => ({ cadet, range: sheetRange(cadet.callsign) }));
+  if (!targets.length) return;
+  const ranges = targets.map((target) => `ranges=${encodeURIComponent(target.range)}`).join("&");
+  const data = await fetchSheetJson(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values:batchGet?majorDimension=ROWS&${ranges}`);
+  (data.valueRanges || []).forEach((valueRange, index) => {
+    const text = (valueRange.values || []).flat().join(" ").toUpperCase();
+    targets[index].cadet.myRaCompleted = text.includes(myCallsign);
+  });
+  saveState();
+  render();
+}
+
 function rowsFromValues(values = []) {
   return rowsToObjects(values);
+}
+
+function rowsFromGridSheet(sheet = {}) {
+  const rowData = sheet.data?.[0]?.rowData || [];
+  const cellRows = rowData.map((row) => row.values || []);
+  const values = cellRows.map((cells) => cells.map((cell) => cell.formattedValue || ""));
+  return rowsToObjects(values, cellRows);
 }
 
 function headerScore(row = []) {
@@ -366,16 +465,39 @@ function headerScore(row = []) {
   if (has("Employee Number")) score += 4;
   if (has("Callsign")) score += 4;
   if (has("Name")) score += 4;
+  if (has("Rank")) score += 3;
+  if (has("Timezone")) score += 3;
   if (has("Hiring Date")) score += 3;
   if (has("14 day limit")) score += 3;
   if (has("28 day limit")) score += 3;
   if (has("Day 1")) score += 2;
   if (has("Day 2")) score += 2;
   if (has("FTO RA's") || has("Unique FTO RA's")) score += 2;
+  if (has("FTO")) score += 2;
+  if (has("HART")) score += 2;
+  if (has("MET")) score += 2;
+  if (has("Doctor")) score += 2;
   return score;
 }
 
-function rowsToObjects(values = []) {
+function cellColor(cell = {}) {
+  return cell.effectiveFormat?.backgroundColorStyle?.rgbColor || cell.effectiveFormat?.backgroundColor || null;
+}
+
+function isGreenCell(cell = {}) {
+  const color = cellColor(cell);
+  if (!color) return false;
+  const red = color.red ?? 0;
+  const green = color.green ?? 0;
+  const blue = color.blue ?? 0;
+  return green > 0.55 && green > red + 0.08 && green > blue + 0.08;
+}
+
+function roleFlag(cell = {}) {
+  return boolValue(cell.formattedValue) || isGreenCell(cell);
+}
+
+function rowsToObjects(values = [], cellRows = []) {
   if (!values.length) return [];
   const headerIndex = values.slice(0, 15).reduce((best, row, index) => headerScore(row) > headerScore(values[best] || []) ? index : best, 0);
   const seen = new Map();
@@ -388,23 +510,43 @@ function rowsToObjects(values = []) {
   });
   return values.slice(headerIndex + 1)
     .filter((row) => row.some((value) => String(value || "").trim()))
-    .map((row) => Object.fromEntries(headers.map((header, index) => [header, row[index] || ""])));
+    .map((row, rowOffset) => {
+      const object = Object.fromEntries(headers.map((header, index) => [header, row[index] || ""]));
+      const cells = cellRows[headerIndex + 1 + rowOffset] || [];
+      object.__roleTags = headers
+        .map((header, index) => ["FTO", "HART", "MET", "Doctor"].includes(header) && roleFlag(cells[index]) ? header : "")
+        .filter(Boolean);
+      return object;
+    });
 }
 
 async function importPrivateGoogleSheet() {
   const { id, gid } = sheetInfoFromUrl(els.googleUrl.value);
-  const metadata = await fetchSheetJson(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(id)}?fields=sheets.properties(sheetId,title)`);
-  const sheet = (metadata.sheets || []).find((entry) => String(entry.properties?.sheetId) === String(gid)) || metadata.sheets?.[0];
-  const title = sheet?.properties?.title;
-  if (!title) throw new Error("Could not find that sheet tab.");
+  const metadata = await sheetMetadata(id);
+  const title = findSheetTitle(metadata.sheets || [], gid);
   const range = encodeURIComponent(`'${title.replace(/'/g, "''")}'`);
   const values = await fetchSheetJson(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(id)}/values/${range}?majorDimension=ROWS`);
-  importRows(rowsFromValues(values.values || []));
+  const count = importRows(rowsFromValues(values.values || []));
+  await applyMyRaFromCadetTabs(id, metadata.sheets || []);
+  return count;
+}
+
+async function importPrivateRosterSheet() {
+  const { id, gid } = sheetInfoFromUrl(els.rosterUrl?.value || DEFAULT_ROSTER_URL);
+  const title = await sheetTitleFromInfo(id, gid);
+  const range = encodeURIComponent(`'${title.replace(/'/g, "''")}'`);
+  const fields = encodeURIComponent("sheets(properties(sheetId,title),data(rowData(values(formattedValue,effectiveFormat(backgroundColor,backgroundColorStyle(rgbColor))))))");
+  const spreadsheet = await fetchSheetJson(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(id)}?includeGridData=true&ranges=${range}&fields=${fields}`);
+  const sheet = (spreadsheet.sheets || []).find((entry) => String(entry.properties?.sheetId) === String(gid)) || spreadsheet.sheets?.[0];
+  return importRosterRows(rowsFromGridSheet(sheet || {}));
 }
 
 async function importGoogleSheet() {
+  let cadetCount = 0;
+  let rosterCount = 0;
+  const errors = [];
   try {
-    await importPrivateGoogleSheet();
+    cadetCount = await importPrivateGoogleSheet();
   } catch (privateError) {
     try {
       const url = googleCsvUrl(els.googleUrl.value);
@@ -412,10 +554,20 @@ async function importGoogleSheet() {
       if (!response.ok) throw new Error(`Google returned ${response.status}`);
       const text = await response.text();
       if (/html|doctype|sign in/i.test(text.slice(0, 300))) throw new Error("The sheet did not return CSV. It may need to be shared or published.");
-      importRows(parseCsv(text));
+      cadetCount = importRows(parseCsv(text));
     } catch (publicError) {
-      alert(`Could not sync the Google Sheet.\n\nGoogle sign-in: ${privateError.message}\nPublic CSV fallback: ${publicError.message}\n\nUse File > Download > CSV in Google Sheets, then upload it here if needed.`);
+      errors.push(`Cadet sheet: ${privateError.message}; CSV fallback: ${publicError.message}`);
     }
+  }
+  try {
+    rosterCount = await importPrivateRosterSheet();
+  } catch (rosterError) {
+    errors.push(`Roster sheet: ${rosterError.message}`);
+  }
+  if (errors.length) {
+    alert(`Synced with issues.\n\nImported ${cadetCount} cadet row(s) and ${rosterCount} roster row(s).\n\n${errors.join("\n")}`);
+  } else {
+    alert(`Synced ${cadetCount} cadet row(s) and ${rosterCount} roster row(s).`);
   }
 }
 
@@ -434,7 +586,7 @@ function filteredCadets() {
 }
 
 function needsRa(cadet) {
-  return String(cadet.status).toLowerCase().includes("active") && !cadet.raCompleted;
+  return String(cadet.status).toLowerCase().includes("active") && !cadet.myRaCompleted;
 }
 
 function limitRisk(cadet) {
@@ -466,7 +618,7 @@ function cadetCard(cadet) {
         ${pill(cadet.status || "Active", String(cadet.status).toLowerCase().includes("active") ? "good" : "warn")}
       </div>
       <div class="pill-row">
-        ${needsRa(cadet) ? pill("Needs RA", "bad") : pill("RA done", "good")}
+        ${needsRa(cadet) ? pill("Needs my RA", "bad") : pill("My RA done", "good")}
         ${cadet.day1 ? pill("Day 1", "good") : pill("No Day 1", "warn")}
         ${cadet.day2 ? pill("Day 2", "good") : pill("No Day 2", "warn")}
         ${limitPill("14 day", cadet.day14Due, 3)}
@@ -477,7 +629,7 @@ function cadetCard(cadet) {
       <div class="card-actions">
         <button data-edit-cadet="${cadet.id}" type="button">Edit</button>
         <button data-note-cadet="${cadet.id}" type="button">Add note</button>
-        <button data-ra-done="${cadet.id}" type="button">Mark RA done</button>
+        <button data-ra-done="${cadet.id}" type="button">Mark my RA done</button>
       </div>
     </article>
   `;
@@ -490,7 +642,7 @@ function renderStats() {
   const trainingCount = cadets.filter((cadet) => !cadet.day1 || !cadet.day2).length;
   els.stats.innerHTML = [
     ["Cadets", cadets.length],
-    ["Need RA", needsRaCount],
+    ["Need My RA", needsRaCount],
     ["Limit Risk", limitCount],
     ["Need Training", trainingCount],
     ["EMS Listed", state.members.length]
@@ -518,14 +670,15 @@ function renderCadets() {
 
 function renderDirectory() {
   const query = els.search.value.trim().toLowerCase();
-  const members = state.members.filter((member) => !query || `${member.name} ${member.callsign} ${member.rank} ${member.role}`.toLowerCase().includes(query));
+  const members = state.members.filter((member) => !query || `${member.name} ${member.callsign} ${member.rank} ${member.employeeNumber} ${member.timezone} ${(member.tags || []).join(" ")}`.toLowerCase().includes(query));
   els.directoryCount.textContent = members.length;
   els.directory.innerHTML = members.length ? members.map((member) => `
     <div class="directory-row">
       <strong>${escapeHtml(member.name || "Unnamed")}</strong>
       <span>${escapeHtml(member.callsign || "No callsign")}</span>
-      <span class="muted">${escapeHtml([member.rank, member.role].filter(Boolean).join(" - "))}</span>
-      <button data-edit-member="${member.id}" type="button">Edit</button>
+      <span>${escapeHtml(member.employeeNumber || "No employee #")}</span>
+      <span class="muted">${escapeHtml([member.rank, member.timezone].filter(Boolean).join(" - "))}</span>
+      <span class="tag-row">${(member.tags || []).map((tag) => pill(tag, "ems")).join("") || pill("EMS", "ems")}</span>
     </div>
   `).join("") : empty("No EMS directory entries yet.");
 }
@@ -542,6 +695,13 @@ function renderNotes() {
   `).join("") : empty("No local notes yet.");
 }
 
+function renderSettings() {
+  if (els.myCallsign) els.myCallsign.value = state.settings?.myCallsign || DEFAULT_MY_CALLSIGN;
+  if (els.settingsSummary) {
+    els.settingsSummary.textContent = `Current RA callsign check: ${state.settings?.myCallsign || DEFAULT_MY_CALLSIGN}`;
+  }
+}
+
 function empty(text) {
   return `<div class="empty">${escapeHtml(text)}</div>`;
 }
@@ -552,6 +712,7 @@ function render() {
   renderCadets();
   renderDirectory();
   renderNotes();
+  renderSettings();
 }
 
 function field(name, label, value = "", type = "text", extra = "") {
@@ -642,6 +803,13 @@ function saveDialog() {
   render();
 }
 
+function saveSettings() {
+  state.settings = normalizeSettings({ myCallsign: els.myCallsign?.value || DEFAULT_MY_CALLSIGN });
+  saveState();
+  render();
+  alert(`Settings saved. Your RA callsign is ${state.settings.myCallsign}. Sync the sheet again to refresh Needs RA From Me.`);
+}
+
 function csvEscape(value) {
   const text = String(value ?? "");
   return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
@@ -667,9 +835,9 @@ function exportNotes() {
 
 function exportAll() {
   downloadCsv("ems-dashboard-export.csv", [
-    ["Type", "Name", "Callsign", "Rank", "Status", "Day 1", "Day 2", "RA Completed", "14 Day Due", "28 Day Due", "Needs Work", "Notes"],
-    ...state.cadets.map((cadet) => ["Cadet", cadet.name, cadet.callsign, cadet.rank, cadet.status, cadet.day1 ? "Yes" : "No", cadet.day2 ? "Yes" : "No", cadet.raCompleted ? "Yes" : "No", cadet.day14Due, cadet.day28Due, cadet.needsWork, cadet.notes]),
-    ...state.members.map((member) => ["EMS", member.name, member.callsign, member.rank || member.role, member.status, "", "", "", "", "", "", member.notes])
+    ["Type", "Name", "Callsign", "Employee Number", "Rank", "Timezone", "Tags", "Status", "Day 1", "Day 2", "RA Completed", "14 Day Due", "28 Day Due", "Needs Work", "Notes"],
+    ...state.cadets.map((cadet) => ["Cadet", cadet.name, cadet.callsign, cadet.employeeNumber || "", cadet.rank, "", "", cadet.status, cadet.day1 ? "Yes" : "No", cadet.day2 ? "Yes" : "No", cadet.raCompleted ? "Yes" : "No", cadet.day14Due, cadet.day28Due, cadet.needsWork, cadet.notes]),
+    ...state.members.map((member) => ["EMS", member.name, member.callsign, member.employeeNumber, member.rank, member.timezone, (member.tags || []).join(" / "), member.status, "", "", "", "", "", "", member.notes])
   ]);
 }
 
@@ -684,6 +852,7 @@ document.addEventListener("click", async (event) => {
     }
   }
   if (action === "import-google") importGoogleSheet();
+  if (action === "save-settings") saveSettings();
   if (action === "import-file") {
     const file = els.csvFile.files?.[0];
     if (!file) return alert("Choose a CSV file first.");
@@ -718,6 +887,7 @@ document.addEventListener("click", async (event) => {
   if (raDone) {
     const cadet = state.cadets.find((entry) => entry.id === raDone.dataset.raDone);
     if (cadet) {
+      cadet.myRaCompleted = true;
       cadet.raCompleted = true;
       cadet.lastRaDate = new Date().toISOString().slice(0, 10);
       saveState();
