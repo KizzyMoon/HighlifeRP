@@ -18,6 +18,7 @@
           <button data-tab="cadets" type="button">Cadets</button>
           <button data-tab="directory" type="button">Directory</button>
           <button data-tab="notes" type="button">Notes</button>
+          <button data-tab="settings" type="button">Settings</button>
         </nav>
         <a class="home-link" href="index.html">Vault</a>
       </header>
@@ -100,6 +101,23 @@
             <span data-notes-count>0</span>
           </div>
           <div class="notes-list" data-notes-list></div>
+        </article>
+      </section>
+
+      <section class="view is-hidden" data-view="settings">
+        <article class="panel settings-panel">
+          <div class="panel-head">
+            <h2>Settings</h2>
+            <span>EMS</span>
+          </div>
+          <div class="settings-grid">
+            <label>
+              My callsign
+              <input data-my-callsign value="M3-18" />
+            </label>
+            <button data-action="save-settings" type="button">Save Settings</button>
+            <p data-settings-summary class="muted">Used to check each cadet sheet for RAs you completed.</p>
+          </div>
         </article>
       </section>
     </main>
