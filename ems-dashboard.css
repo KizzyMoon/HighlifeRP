@@ -333,7 +333,7 @@ label {
 }
 
 .directory-row,
-note-row {
+.note-row {
   display: grid;
   grid-template-columns: minmax(220px, 1.4fr) 90px 90px minmax(170px, 220px) minmax(190px, 240px);
   gap: 18px;
