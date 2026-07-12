@@ -290,10 +290,15 @@ label {
 }
 
 .pill-row,
+.status-pills,
 .card-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
+}
+
+.status-pills {
+  justify-content: flex-end;
 }
 
 .pill {
@@ -313,6 +318,7 @@ label {
 
 .pill.good { background: rgba(130, 230, 179, 0.16); color: var(--green); }
 .pill.warn { background: rgba(255, 209, 102, 0.16); color: var(--warn); }
+.pill.zone { background: rgba(255, 255, 255, 0.08); color: #ffd0d0; }
 .pill.bad,
 .pill.ems,
 .pill.doctor { background: rgba(248, 162, 162, 0.18); color: var(--accent); }
@@ -327,7 +333,7 @@ label {
 }
 
 .directory-row,
-.note-row {
+note-row {
   display: grid;
   grid-template-columns: minmax(220px, 1.4fr) 90px 90px minmax(170px, 220px) minmax(190px, 240px);
   gap: 18px;
