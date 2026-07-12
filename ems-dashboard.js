@@ -599,6 +599,16 @@ function pill(label, stateName = "") {
   return `<span class="pill ${stateName}">${escapeHtml(label)}</span>`;
 }
 
+function rolePill(label) {
+  const className = {
+    FTO: "fto",
+    HART: "hart",
+    MET: "met",
+    Doctor: "doctor"
+  }[label] || "ems";
+  return pill(label, className);
+}
+
 function limitPill(label, dueDate, dangerAt) {
   const days = daysUntil(dueDate);
   if (days === null) return pill(`${label}: not set`, "warn");
@@ -678,7 +688,7 @@ function renderDirectory() {
       <span>${escapeHtml(member.callsign || "No callsign")}</span>
       <span>${escapeHtml(member.employeeNumber || "No employee #")}</span>
       <span class="muted">${escapeHtml([member.rank, member.timezone].filter(Boolean).join(" - "))}</span>
-      <span class="tag-row">${(member.tags || []).map((tag) => pill(tag, "ems")).join("") || pill("EMS", "ems")}</span>
+      <span class="tag-row">${(member.tags || []).map(rolePill).join("") || pill("EMS", "ems")}</span>
     </div>
   `).join("") : empty("No EMS directory entries yet.");
 }

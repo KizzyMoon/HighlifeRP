@@ -314,7 +314,11 @@ label {
 .pill.good { background: rgba(130, 230, 179, 0.16); color: var(--green); }
 .pill.warn { background: rgba(255, 209, 102, 0.16); color: var(--warn); }
 .pill.bad,
-.pill.ems { background: rgba(248, 162, 162, 0.18); color: var(--accent); }
+.pill.ems,
+.pill.doctor { background: rgba(248, 162, 162, 0.18); color: var(--accent); }
+.pill.fto { background: rgba(130, 230, 179, 0.16); color: var(--green); }
+.pill.hart { background: rgba(255, 105, 125, 0.18); color: #ff7f8f; }
+.pill.met { background: rgba(105, 160, 255, 0.18); color: #8fb6ff; }
 
 .card-actions button {
   min-height: 26px;
@@ -325,10 +329,20 @@ label {
 .directory-row,
 .note-row {
   display: grid;
-  grid-template-columns: minmax(160px, 1fr) minmax(80px, 110px) minmax(90px, 120px) minmax(130px, 190px) minmax(120px, auto);
-  gap: 12px;
+  grid-template-columns: minmax(220px, 1.4fr) 90px 90px minmax(170px, 220px) minmax(190px, 240px);
+  gap: 18px;
   align-items: center;
   padding: 11px 12px;
+}
+
+.directory-row > span:nth-child(2),
+.directory-row > span:nth-child(3) {
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.directory-row > .muted {
+  white-space: nowrap;
 }
 
 .note-row {
@@ -339,6 +353,7 @@ label {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
+  justify-content: flex-end;
 }
 
 .settings-panel {
