@@ -335,8 +335,8 @@ label {
 .directory-row,
 .note-row {
   display: grid;
-  grid-template-columns: minmax(220px, 1.4fr) 90px 90px minmax(170px, 220px) minmax(190px, 240px);
-  gap: 18px;
+  grid-template-columns: minmax(180px, 280px) 76px 70px minmax(135px, 170px) 190px;
+  gap: 16px;
   align-items: center;
   padding: 11px 12px;
 }
@@ -356,10 +356,10 @@ label {
 }
 
 .tag-row {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, 42px);
   gap: 5px;
-  justify-content: flex-end;
+  justify-content: start;
 }
 
 .settings-panel {
