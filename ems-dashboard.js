@@ -119,7 +119,7 @@ function parseDate(value) {
   }
   const direct = new Date(raw);
   if (!Number.isNaN(direct.valueOf())) return direct.toISOString().slice(0, 10);
-  const match = raw.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/);
+  const match = raw.match(/^(\d{1,2})[\/. -](\d{1,2})[\/. -](\d{2,4})$/);
   if (!match) return "";
   const day = Number(match[1]);
   const month = Number(match[2]) - 1;
@@ -161,6 +161,7 @@ function normalizeCadet(raw = {}) {
     name: raw.name || "",
     callsign: raw.callsign || "",
     rank: raw.rank || "Cadet",
+    timezone: raw.timezone || "",
     status: raw.status || "Active",
     trainer: raw.trainer || "",
     startDate,
@@ -215,6 +216,7 @@ function cadetFromRow(row) {
     name,
     callsign,
     rank: pick(row, ["Rank", "Position"]) || "Cadet",
+    timezone: pick(row, ["Timezone", "Time Zone", "TZ", "Zone"]),
     status: pick(row, ["Status", "Current Status"]) || (loa && loa !== "-" ? "LOA" : "Active"),
     trainer: pick(row, ["Trainer", "Mentor", "Supervisor"]),
     startDate,
@@ -575,7 +577,7 @@ function filteredCadets() {
   const query = els.search.value.trim().toLowerCase();
   const filter = els.statusFilter.value;
   return state.cadets.filter((cadet) => {
-    const text = `${cadet.name} ${cadet.callsign} ${cadet.rank} ${cadet.status} ${cadet.needsWork} ${cadet.notes}`.toLowerCase();
+    const text = `${cadet.name} ${cadet.callsign} ${cadet.rank} ${cadet.timezone} ${cadet.status} ${cadet.needsWork} ${cadet.notes}`.toLowerCase();
     if (query && !text.includes(query)) return false;
     if (filter === "needs-ra" && !needsRa(cadet)) return false;
     if (filter === "limit-risk" && !limitRisk(cadet)) return false;
@@ -592,7 +594,7 @@ function needsRa(cadet) {
 function limitRisk(cadet) {
   const day14 = daysUntil(cadet.day14Due);
   const day28 = daysUntil(cadet.day28Due);
-  return (day14 !== null && day14 <= 3) || (day28 !== null && day28 <= 7);
+  return (day14 !== null && day14 >= 0 && day14 <= 3) || (day28 !== null && day28 >= 0 && day28 <= 7);
 }
 
 function pill(label, stateName = "") {
@@ -612,8 +614,9 @@ function rolePill(label) {
 function limitPill(label, dueDate, dangerAt) {
   const days = daysUntil(dueDate);
   if (days === null) return pill(`${label}: not set`, "warn");
-  const stateName = days < 0 ? "bad" : days <= dangerAt ? "warn" : "good";
-  const text = days < 0 ? `${label}: ${Math.abs(days)} days overdue` : `${label}: ${days} days left`;
+  if (days < 0) return "";
+  const stateName = days <= dangerAt ? "warn" : "good";
+  const text = `${label}: ${days} days left`;
   return pill(text, stateName);
 }
 
@@ -625,7 +628,10 @@ function cadetCard(cadet) {
           <h3>${escapeHtml(cadet.name || "Unnamed cadet")}</h3>
           <p class="muted">${escapeHtml([cadet.callsign || "No callsign", cadet.employeeNumber ? `#${cadet.employeeNumber}` : "", cadet.rank].filter(Boolean).join(" - "))}</p>
         </div>
-        ${pill(cadet.status || "Active", String(cadet.status).toLowerCase().includes("active") ? "good" : "warn")}
+        <div class="status-pills">
+          ${pill(cadet.status || "Active", String(cadet.status).toLowerCase().includes("active") ? "good" : "warn")}
+          ${cadet.timezone ? pill(cadet.timezone, "zone") : ""}
+        </div>
       </div>
       <div class="pill-row">
         ${needsRa(cadet) ? pill("Needs my RA", "bad") : pill("My RA done", "good")}
@@ -846,7 +852,7 @@ function exportNotes() {
 function exportAll() {
   downloadCsv("ems-dashboard-export.csv", [
     ["Type", "Name", "Callsign", "Employee Number", "Rank", "Timezone", "Tags", "Status", "Day 1", "Day 2", "RA Completed", "14 Day Due", "28 Day Due", "Needs Work", "Notes"],
-    ...state.cadets.map((cadet) => ["Cadet", cadet.name, cadet.callsign, cadet.employeeNumber || "", cadet.rank, "", "", cadet.status, cadet.day1 ? "Yes" : "No", cadet.day2 ? "Yes" : "No", cadet.raCompleted ? "Yes" : "No", cadet.day14Due, cadet.day28Due, cadet.needsWork, cadet.notes]),
+    ...state.cadets.map((cadet) => ["Cadet", cadet.name, cadet.callsign, cadet.employeeNumber || "", cadet.rank, cadet.timezone || "", "", cadet.status, cadet.day1 ? "Yes" : "No", cadet.day2 ? "Yes" : "No", cadet.raCompleted ? "Yes" : "No", cadet.day14Due, cadet.day28Due, cadet.needsWork, cadet.notes]),
     ...state.members.map((member) => ["EMS", member.name, member.callsign, member.employeeNumber, member.rank, member.timezone, (member.tags || []).join(" / "), member.status, "", "", "", "", "", "", member.notes])
   ]);
 }
@@ -864,7 +870,7 @@ document.addEventListener("click", async (event) => {
   if (action === "import-google") importGoogleSheet();
   if (action === "save-settings") saveSettings();
   if (action === "import-file") {
-    const file = els.csvFile.files?.[0];
+    const file = els.csvFile?.files?.[0];
     if (!file) return alert("Choose a CSV file first.");
     importRows(parseCsv(await file.text()));
   }
