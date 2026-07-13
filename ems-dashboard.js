@@ -4,6 +4,20 @@ const DEFAULT_ROSTER_URL = "https://docs.google.com/spreadsheets/d/1b9RV4HZh2Kle
 const DEFAULT_MY_CALLSIGN = "M3-18";
 const GOOGLE_CLIENT_ID = "210656397822-druudgp358pepcj342slktvmfj5f9ok2.apps.googleusercontent.com";
 const SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets.readonly";
+const RANK_ORDER = [
+  "Chief",
+  "Deputy Chief",
+  "Captain",
+  "Lieutenant",
+  "Sergeant",
+  "Senior EMT",
+  "EMT IV",
+  "EMT III",
+  "EMT II",
+  "EMT I",
+  "Probationer",
+  "Cadet"
+];
 
 const state = loadState();
 let activeTab = "overview";
@@ -622,6 +636,11 @@ function directoryRank(member) {
   return member.rank || "Unranked";
 }
 
+function rankOrderIndex(rank) {
+  const index = RANK_ORDER.findIndex((item) => normalizeKey(item) === normalizeKey(rank));
+  return index >= 0 ? index : RANK_ORDER.length;
+}
+
 function directoryRankGroup(rank, members) {
   return `
     <section class="directory-group">
@@ -728,7 +747,11 @@ function renderDirectory() {
     const rank = directoryRank(member);
     groups.set(rank, [...(groups.get(rank) || []), member]);
   }
-  els.directory.innerHTML = members.length ? [...groups.entries()].map(([rank, rankMembers]) => directoryRankGroup(rank, rankMembers)).join("") : empty("No EMS directory entries yet.");
+  const sortedGroups = [...groups.entries()].sort(([rankA], [rankB]) => {
+    const orderCompare = rankOrderIndex(rankA) - rankOrderIndex(rankB);
+    return orderCompare || String(rankA).localeCompare(String(rankB));
+  });
+  els.directory.innerHTML = members.length ? sortedGroups.map(([rank, rankMembers]) => directoryRankGroup(rank, rankMembers)).join("") : empty("No EMS directory entries yet.");
 }
 
 function renderNotes() {
