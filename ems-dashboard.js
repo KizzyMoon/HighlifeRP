@@ -611,6 +611,41 @@ function rolePill(label) {
   return pill(label, className);
 }
 
+function roleTagRow(tags = []) {
+  const current = new Set(tags);
+  return ["FTO", "HART", "MET", "Doctor"].map((role) => (
+    current.has(role) ? rolePill(role) : `<span class="pill role-placeholder" aria-hidden="true">${role}</span>`
+  )).join("");
+}
+
+function directoryRank(member) {
+  return member.rank || "Unranked";
+}
+
+function directoryRankGroup(rank, members) {
+  return `
+    <section class="directory-group">
+      <div class="directory-rank">
+        <span>${escapeHtml(rank)}</span>
+        <strong>${members.length}</strong>
+      </div>
+      ${members.map(directoryRow).join("")}
+    </section>
+  `;
+}
+
+function directoryRow(member) {
+  return `
+    <div class="directory-row">
+      <strong>${escapeHtml(member.name || "Unnamed")}</strong>
+      <span>${escapeHtml(member.callsign || "No callsign")}</span>
+      <span>${escapeHtml(member.employeeNumber || "No employee #")}</span>
+      <span class="muted">${escapeHtml([member.rank, member.timezone].filter(Boolean).join(" - "))}</span>
+      <span class="tag-row">${roleTagRow(member.tags || [])}</span>
+    </div>
+  `;
+}
+
 function limitPill(label, dueDate, dangerAt) {
   const days = daysUntil(dueDate);
   if (days === null) return pill(`${label}: not set`, "warn");
@@ -688,15 +723,12 @@ function renderDirectory() {
   const query = els.search.value.trim().toLowerCase();
   const members = state.members.filter((member) => !query || `${member.name} ${member.callsign} ${member.rank} ${member.employeeNumber} ${member.timezone} ${(member.tags || []).join(" ")}`.toLowerCase().includes(query));
   els.directoryCount.textContent = members.length;
-  els.directory.innerHTML = members.length ? members.map((member) => `
-    <div class="directory-row">
-      <strong>${escapeHtml(member.name || "Unnamed")}</strong>
-      <span>${escapeHtml(member.callsign || "No callsign")}</span>
-      <span>${escapeHtml(member.employeeNumber || "No employee #")}</span>
-      <span class="muted">${escapeHtml([member.rank, member.timezone].filter(Boolean).join(" - "))}</span>
-      <span class="tag-row">${(member.tags || []).map(rolePill).join("") || pill("EMS", "ems")}</span>
-    </div>
-  `).join("") : empty("No EMS directory entries yet.");
+  const groups = new Map();
+  for (const member of members) {
+    const rank = directoryRank(member);
+    groups.set(rank, [...(groups.get(rank) || []), member]);
+  }
+  els.directory.innerHTML = members.length ? [...groups.entries()].map(([rank, rankMembers]) => directoryRankGroup(rank, rankMembers)).join("") : empty("No EMS directory entries yet.");
 }
 
 function renderNotes() {
