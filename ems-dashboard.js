@@ -659,7 +659,7 @@ function directoryRow(member) {
       <strong>${escapeHtml(member.name || "Unnamed")}</strong>
       <span>${escapeHtml(member.callsign || "No callsign")}</span>
       <span>${escapeHtml(member.employeeNumber || "No employee #")}</span>
-      <span class="muted">${escapeHtml([member.rank, member.timezone].filter(Boolean).join(" - "))}</span>
+      <span class="muted">${escapeHtml(member.timezone || "No timezone")}</span>
       <span class="tag-row">${roleTagRow(member.tags || [])}</span>
     </div>
   `;
