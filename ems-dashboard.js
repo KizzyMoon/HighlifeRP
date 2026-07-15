@@ -728,7 +728,12 @@ function trainingPill(cadet) {
   return pill(`${label} avg ${average.toFixed(2)}`, trainingLevel(cadet));
 }
 
-function cadetCard(cadet) {
+function cadetCard(cadet, options = {}) {
+  const dayPills = [
+    cadet.day1 ? options.onlyMissingTraining ? "" : pill("Day 1", "good") : pill("No Day 1", "warn"),
+    cadet.day2 ? options.onlyMissingTraining ? "" : pill("Day 2", "good") : pill("No Day 2", "warn")
+  ].join("");
+  const raPill = options.hideRaPill ? "" : needsRa(cadet) ? pill("Needs my RA", "bad") : pill("My RA done", "good");
   return `
     <article class="card training-${trainingLevel(cadet)}">
       <div class="card-head">
@@ -742,9 +747,8 @@ function cadetCard(cadet) {
         </div>
       </div>
       <div class="pill-row">
-        ${needsRa(cadet) ? pill("Needs my RA", "bad") : pill("My RA done", "good")}
-        ${cadet.day1 ? pill("Day 1", "good") : pill("No Day 1", "warn")}
-        ${cadet.day2 ? pill("Day 2", "good") : pill("No Day 2", "warn")}
+        ${raPill}
+        ${dayPills}
         ${trainingPill(cadet)}
         ${limitPill("14 day", cadet.day14Due, 3)}
         ${limitPill("28 day", cadet.day28Due, 7)}
@@ -781,8 +785,8 @@ function renderOverview() {
   const limitItems = cadets.filter(limitRisk);
   els.needsRaCount.textContent = needsRaItems.length;
   els.limitCount.textContent = limitItems.length;
-  els.needsRaList.innerHTML = needsRaItems.length ? needsRaItems.map(cadetCard).join("") : empty("No cadets currently need an RA.");
-  els.limitList.innerHTML = limitItems.length ? limitItems.map(cadetCard).join("") : empty("No cadets are close to their 14/28 day limits.");
+  els.needsRaList.innerHTML = needsRaItems.length ? needsRaItems.map((cadet) => cadetCard(cadet, { hideRaPill: true, onlyMissingTraining: true })).join("") : empty("No cadets currently need an RA.");
+  els.limitList.innerHTML = limitItems.length ? limitItems.map((cadet) => cadetCard(cadet, { onlyMissingTraining: true })).join("") : empty("No cadets are close to their 14/28 day limits.");
 }
 
 function renderCadets() {
