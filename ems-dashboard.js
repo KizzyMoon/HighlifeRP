@@ -169,6 +169,7 @@ function normalizeCadet(raw = {}) {
   const startDate = parseDate(raw.startDate || raw.start || raw.joined || raw.joinDate);
   const day14Due = parseDate(raw.day14Due || raw.fourteenDayDue || raw["14day"]) || addDays(startDate, 14);
   const day28Due = parseDate(raw.day28Due || raw.twentyEightDayDue || raw["28day"]) || addDays(startDate, 28);
+  const trainingAverage = raw.trainingAverage === null || raw.trainingAverage === undefined || raw.trainingAverage === "" ? null : Number(raw.trainingAverage);
   return {
     id: raw.id || crypto.randomUUID(),
     employeeNumber: raw.employeeNumber || "",
@@ -184,6 +185,8 @@ function normalizeCadet(raw = {}) {
     lastRaDate: parseDate(raw.lastRaDate || raw.lastRA || raw.raDate),
     raCompleted: Boolean(raw.raCompleted),
     myRaCompleted: Boolean(raw.myRaCompleted),
+    trainingAverage: Number.isNaN(trainingAverage) ? null : trainingAverage,
+    trainingAssessments: Number(raw.trainingAssessments || 0),
     day1: Boolean(raw.day1),
     day2: Boolean(raw.day2),
     needsWork: raw.needsWork || "",
@@ -447,17 +450,23 @@ function sheetRange(title, range = "A1:Z220") {
 
 async function applyMyRaFromCadetTabs(spreadsheetId, sheets = []) {
   const myCallsign = normalizeCallsign(state.settings?.myCallsign);
-  if (!myCallsign) return;
   const titles = new Set(sheets.map((entry) => entry.properties?.title).filter(Boolean));
   const targets = state.cadets
     .filter((cadet) => cadet.callsign && titles.has(cadet.callsign))
-    .map((cadet) => ({ cadet, range: sheetRange(cadet.callsign) }));
+    .map((cadet) => ({ cadet, range: sheetRange(cadet.callsign, "A1:Z130") }));
   if (!targets.length) return;
   const ranges = targets.map((target) => `ranges=${encodeURIComponent(target.range)}`).join("&");
-  const data = await fetchSheetJson(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values:batchGet?majorDimension=ROWS&${ranges}`);
-  (data.valueRanges || []).forEach((valueRange, index) => {
-    const text = (valueRange.values || []).flat().join(" ").toUpperCase();
-    targets[index].cadet.myRaCompleted = text.includes(myCallsign);
+  const fields = encodeURIComponent("sheets(properties(title),data(rowData(values(formattedValue,effectiveFormat(backgroundColor,backgroundColorStyle(rgbColor))))))");
+  const data = await fetchSheetJson(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}?includeGridData=true&${ranges}&fields=${fields}`);
+  const byTitle = new Map((data.sheets || []).map((sheet) => [sheet.properties?.title, sheet]));
+  targets.forEach(({ cadet }) => {
+    const sheet = byTitle.get(cadet.callsign);
+    const cells = sheet?.data?.[0]?.rowData || [];
+    const text = cells.flatMap((row) => row.values || []).map((cell) => cell.formattedValue || "").join(" ").toUpperCase();
+    if (myCallsign) cadet.myRaCompleted = text.includes(myCallsign);
+    const score = cadetTrainingScore(sheet);
+    cadet.trainingAverage = score.average;
+    cadet.trainingAssessments = score.count;
   });
   saveState();
   render();
@@ -507,6 +516,38 @@ function isGreenCell(cell = {}) {
   const green = color.green ?? 0;
   const blue = color.blue ?? 0;
   return green > 0.55 && green > red + 0.08 && green > blue + 0.08;
+}
+
+function assessmentScoreFromCell(cell = {}, rowIndex = 0, columnIndex = 0) {
+  if (rowIndex < 10 || columnIndex < 6) return null;
+  const color = cellColor(cell);
+  if (!color) return null;
+  const red = color.red ?? 0;
+  const green = color.green ?? 0;
+  const blue = color.blue ?? 0;
+  if (red > 0.75 && green < 0.35 && blue < 0.35) return 3;
+  if (red > 0.75 && green >= 0.35 && green < 0.78 && blue < 0.35) return 2;
+  if (green > 0.45 && green > red + 0.08 && green > blue + 0.08) return 1;
+  return null;
+}
+
+function cadetTrainingScore(sheet = {}) {
+  let total = 0;
+  let count = 0;
+  const rows = sheet.data?.[0]?.rowData || [];
+  rows.forEach((row, rowIndex) => {
+    (row.values || []).forEach((cell, columnIndex) => {
+      const score = assessmentScoreFromCell(cell, rowIndex, columnIndex);
+      if (score !== null) {
+        total += score;
+        count += 1;
+      }
+    });
+  });
+  return {
+    average: count ? Number((total / count).toFixed(2)) : null,
+    count
+  };
 }
 
 function roleFlag(cell = {}) {
@@ -674,9 +715,24 @@ function limitPill(label, dueDate, dangerAt) {
   return pill(text, stateName);
 }
 
+function trainingLevel(cadet) {
+  const average = Number(cadet.trainingAverage);
+  if (!average || Number.isNaN(average)) return "none";
+  if (average <= 1.35) return "good";
+  if (average <= 1.9) return "warn";
+  return "bad";
+}
+
+function trainingPill(cadet) {
+  const average = Number(cadet.trainingAverage);
+  if (!average || Number.isNaN(average)) return pill("No avg yet", "zone");
+  const label = trainingLevel(cadet) === "good" ? "Confident" : trainingLevel(cadet) === "warn" ? "Developing" : "Needs attention";
+  return pill(`${label} avg ${average.toFixed(2)}`, trainingLevel(cadet));
+}
+
 function cadetCard(cadet) {
   return `
-    <article class="card">
+    <article class="card training-${trainingLevel(cadet)}">
       <div class="card-head">
         <div>
           <h3>${escapeHtml(cadet.name || "Unnamed cadet")}</h3>
@@ -691,6 +747,7 @@ function cadetCard(cadet) {
         ${needsRa(cadet) ? pill("Needs my RA", "bad") : pill("My RA done", "good")}
         ${cadet.day1 ? pill("Day 1", "good") : pill("No Day 1", "warn")}
         ${cadet.day2 ? pill("Day 2", "good") : pill("No Day 2", "warn")}
+        ${trainingPill(cadet)}
         ${limitPill("14 day", cadet.day14Due, 3)}
         ${limitPill("28 day", cadet.day28Due, 7)}
       </div>
