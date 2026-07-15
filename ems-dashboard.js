@@ -36,13 +36,11 @@ const els = {
   tabs: document.querySelectorAll("[data-tab]"),
   needsRaList: document.querySelector("[data-needs-ra-list]"),
   limitList: document.querySelector("[data-limit-list]"),
-  workList: document.querySelector("[data-work-list]"),
   cadetGrid: document.querySelector("[data-cadet-grid]"),
   directory: document.querySelector("[data-directory]"),
   notesList: document.querySelector("[data-notes-list]"),
   needsRaCount: document.querySelector("[data-count-needs-ra]"),
   limitCount: document.querySelector("[data-count-limits]"),
-  workCount: document.querySelector("[data-count-work]"),
   directoryCount: document.querySelector("[data-directory-count]"),
   notesCount: document.querySelector("[data-notes-count]"),
   dialog: document.querySelector("[data-dialog]"),
@@ -781,13 +779,10 @@ function renderOverview() {
   const cadets = filteredCadets();
   const needsRaItems = cadets.filter(needsRa);
   const limitItems = cadets.filter(limitRisk);
-  const workItems = cadets.filter((cadet) => cadet.needsWork || !cadet.day1 || !cadet.day2 || needsRa(cadet));
   els.needsRaCount.textContent = needsRaItems.length;
   els.limitCount.textContent = limitItems.length;
-  els.workCount.textContent = workItems.length;
   els.needsRaList.innerHTML = needsRaItems.length ? needsRaItems.map(cadetCard).join("") : empty("No cadets currently need an RA.");
   els.limitList.innerHTML = limitItems.length ? limitItems.map(cadetCard).join("") : empty("No cadets are close to their 14/28 day limits.");
-  els.workList.innerHTML = workItems.length ? workItems.map(cadetCard).join("") : empty("No cadet work items found.");
 }
 
 function renderCadets() {
