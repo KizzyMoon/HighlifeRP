@@ -88,6 +88,10 @@ function normalizeCallsign(value) {
   return String(value || "").trim().toUpperCase().replace(/\s+/g, "");
 }
 
+function cellText(cell = {}) {
+  return String(cell.formattedValue || "").trim();
+}
+
 function normalizeSettings(raw = {}) {
   return {
     myCallsign: normalizeCallsign(raw.myCallsign || DEFAULT_MY_CALLSIGN)
@@ -460,8 +464,7 @@ async function applyMyRaFromCadetTabs(spreadsheetId, sheets = []) {
   targets.forEach(({ cadet }) => {
     const sheet = byTitle.get(cadet.callsign);
     const cells = sheet?.data?.[0]?.rowData || [];
-    const text = cells.flatMap((row) => row.values || []).map((cell) => cell.formattedValue || "").join(" ").toUpperCase();
-    if (myCallsign) cadet.myRaCompleted = text.includes(myCallsign);
+    if (myCallsign) cadet.myRaCompleted = cadetHasRaCallsign(cells, myCallsign);
     const score = cadetTrainingScore(sheet);
     cadet.trainingAverage = score.average;
     cadet.trainingAssessments = score.count;
@@ -514,6 +517,20 @@ function isGreenCell(cell = {}) {
   const green = color.green ?? 0;
   const blue = color.blue ?? 0;
   return green > 0.55 && green > red + 0.08 && green > blue + 0.08;
+}
+
+function cadetHasRaCallsign(rows = [], myCallsign = "") {
+  const target = normalizeCallsign(myCallsign);
+  if (!target) return false;
+  const callsignRow = rows.find((row) => (
+    (row.values || []).some((cell) => normalizeKey(cellText(cell)).includes("callsignhere"))
+  ));
+  if (!callsignRow) return false;
+  const values = callsignRow.values || [];
+  const labelIndex = values.findIndex((cell) => normalizeKey(cellText(cell)).includes("callsignhere"));
+  return values
+    .slice(Math.max(labelIndex + 1, 0))
+    .some((cell) => normalizeCallsign(cellText(cell)) === target);
 }
 
 function assessmentScoreFromCell(cell = {}, rowIndex = 0, columnIndex = 0) {
