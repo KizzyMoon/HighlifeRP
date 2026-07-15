@@ -726,7 +726,7 @@ function limitPill(label, dueDate, dangerAt) {
   if (days === null) return pill(`${label}: not set`, "warn");
   if (days < 0) return "";
   const stateName = days <= dangerAt ? "warn" : "good";
-  const text = `${label}: ${days} days left`;
+  const text = `${label}: ${days}d left`;
   return pill(text, stateName);
 }
 
@@ -740,9 +740,9 @@ function trainingLevel(cadet) {
 
 function trainingPill(cadet) {
   const average = Number(cadet.trainingAverage);
-  if (!average || Number.isNaN(average)) return pill("No avg yet", "zone");
+  if (!average || Number.isNaN(average)) return pill("No avg", "zone");
   const label = trainingLevel(cadet) === "good" ? "Confident" : trainingLevel(cadet) === "warn" ? "Developing" : "Needs attention";
-  return pill(`${label} avg ${average.toFixed(2)}`, trainingLevel(cadet));
+  return pill(`${label} ${average.toFixed(2)}`, trainingLevel(cadet));
 }
 
 function cadetCard(cadet, options = {}) {
@@ -775,7 +775,7 @@ function cadetCard(cadet, options = {}) {
       <div class="card-actions">
         <button data-edit-cadet="${cadet.id}" type="button">Edit</button>
         <button data-note-cadet="${cadet.id}" type="button">Add note</button>
-        <button data-ra-done="${cadet.id}" type="button">Mark my RA done</button>
+        <button data-ra-done="${cadet.id}" type="button">RA done</button>
       </div>
     </article>
   `;
