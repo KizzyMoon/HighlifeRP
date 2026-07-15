@@ -764,6 +764,35 @@ function cadetCard(cadet, options = {}) {
   `;
 }
 
+function overviewCadetCard(cadet, options = {}) {
+  const missingTraining = [
+    cadet.day1 ? "" : pill("No Day 1", "warn"),
+    cadet.day2 ? "" : pill("No Day 2", "warn")
+  ].join("");
+  return `
+    <article class="card training-${trainingLevel(cadet)}">
+      <div class="card-head">
+        <div>
+          <h3>${escapeHtml(cadet.name || "Unnamed cadet")}</h3>
+          <p class="muted">${escapeHtml([cadet.callsign || "No callsign", cadet.employeeNumber ? `#${cadet.employeeNumber}` : "", cadet.rank].filter(Boolean).join(" - "))}</p>
+        </div>
+        <div class="status-pills">
+          ${cadet.timezone ? pill(cadet.timezone, "zone") : ""}
+        </div>
+      </div>
+      <div class="pill-row">
+        ${options.showRaPill ? needsRa(cadet) ? pill("Needs my RA", "bad") : pill("My RA done", "good") : ""}
+        ${missingTraining}
+        ${trainingPill(cadet)}
+        ${limitPill("14 day", cadet.day14Due, 3)}
+        ${limitPill("28 day", cadet.day28Due, 7)}
+      </div>
+      <p><strong>Work on:</strong> ${escapeHtml(cadet.needsWork || "Nothing logged yet.")}</p>
+      <p class="muted"><strong>My notes:</strong> ${escapeHtml(cadet.notes || "No local notes yet.")}</p>
+    </article>
+  `;
+}
+
 function renderStats() {
   const cadets = state.cadets;
   const needsRaCount = cadets.filter(needsRa).length;
@@ -785,8 +814,8 @@ function renderOverview() {
   const limitItems = cadets.filter(limitRisk);
   els.needsRaCount.textContent = needsRaItems.length;
   els.limitCount.textContent = limitItems.length;
-  els.needsRaList.innerHTML = needsRaItems.length ? needsRaItems.map((cadet) => cadetCard(cadet, { hideRaPill: true, onlyMissingTraining: true })).join("") : empty("No cadets currently need an RA.");
-  els.limitList.innerHTML = limitItems.length ? limitItems.map((cadet) => cadetCard(cadet, { onlyMissingTraining: true })).join("") : empty("No cadets are close to their 14/28 day limits.");
+  els.needsRaList.innerHTML = needsRaItems.length ? needsRaItems.map((cadet) => overviewCadetCard(cadet)).join("") : empty("No cadets currently need an RA.");
+  els.limitList.innerHTML = limitItems.length ? limitItems.map((cadet) => overviewCadetCard(cadet, { showRaPill: true })).join("") : empty("No cadets are close to their 14/28 day limits.");
 }
 
 function renderCadets() {
