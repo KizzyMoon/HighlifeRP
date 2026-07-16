@@ -511,6 +511,13 @@ label {
   gap: 14px;
 }
 
+.cheat-top-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(340px, 0.92fr);
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
 .cheat-panel {
   border: 1px solid rgba(248, 162, 162, 0.22);
   border-radius: 8px;
@@ -543,6 +550,15 @@ label {
 .cheat-panel.icu-card {
   grid-column: auto;
   align-self: start;
+}
+
+.cheat-top-grid .cheat-panel {
+  padding: 14px 16px;
+}
+
+.cheat-top-grid .cheat-title {
+  margin-bottom: 10px;
+  padding-bottom: 10px;
 }
 
 .cheat-title {
@@ -691,6 +707,11 @@ label {
   min-width: 0;
 }
 
+.cheat-top-grid .cheat-table th,
+.cheat-top-grid .cheat-table td {
+  padding: 6px 8px;
+}
+
 .meds-table th:nth-child(1),
 .meds-table td:nth-child(1) { width: 32%; }
 .meds-table th:nth-child(2),
@@ -836,6 +857,7 @@ menu {
   .note-row,
   .form-grid,
   .settings-grid,
+  .cheat-top-grid,
   .cheat-grid,
   .cheat-lines div {
     grid-template-columns: 1fr;
