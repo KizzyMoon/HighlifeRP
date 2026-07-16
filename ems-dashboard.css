@@ -536,6 +536,14 @@ label {
   border-color: rgba(143, 182, 255, 0.34);
 }
 
+.meds-card {
+  grid-column: 1 / -1;
+}
+
+.icu-card {
+  grid-column: 1 / -1;
+}
+
 .cheat-title {
   display: flex;
   align-items: center;
@@ -640,6 +648,64 @@ label {
   margin: 0;
   color: var(--muted);
   line-height: 1.35;
+}
+
+.cheat-table-wrap {
+  overflow-x: auto;
+}
+
+.cheat-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #fff;
+  font-size: 0.86rem;
+}
+
+.cheat-table th,
+.cheat-table td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 9px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.cheat-table th {
+  color: var(--accent);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cheat-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.cheat-table td:first-child {
+  font-weight: 900;
+}
+
+.meds-table th:nth-child(3),
+.meds-table th:nth-child(5),
+.meds-table th:nth-child(6),
+.meds-table th:nth-child(7),
+.meds-table td:nth-child(3),
+.meds-table td:nth-child(5),
+.meds-table td:nth-child(6),
+.meds-table td:nth-child(7),
+.icu-table th:nth-child(2),
+.icu-table td:nth-child(2) {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.meds-table td:nth-child(5),
+.meds-table td:nth-child(6) {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.icu-table td:nth-child(2) {
+  color: var(--accent);
 }
 
 .empty {
