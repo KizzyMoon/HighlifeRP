@@ -888,6 +888,13 @@ function render() {
   renderSettings();
 }
 
+function setActiveTab(tabName) {
+  activeTab = tabName;
+  els.tabs.forEach((button) => button.classList.toggle("active", button.dataset.tab === activeTab));
+  els.views.forEach((view) => view.classList.toggle("is-hidden", view.dataset.view !== activeTab));
+  els.stats.classList.toggle("is-hidden", activeTab === "cheat-sheet");
+}
+
 function field(name, label, value = "", type = "text", extra = "") {
   return `<label>${label}<input name="${name}" type="${type}" value="${escapeHtml(value)}" ${extra} /></label>`;
 }
@@ -1042,9 +1049,7 @@ document.addEventListener("click", async (event) => {
 
   const tab = event.target.closest("[data-tab]");
   if (tab) {
-    activeTab = tab.dataset.tab;
-    els.tabs.forEach((button) => button.classList.toggle("active", button === tab));
-    els.views.forEach((view) => view.classList.toggle("is-hidden", view.dataset.view !== activeTab));
+    setActiveTab(tab.dataset.tab);
   }
 
   const editCadet = event.target.closest("[data-edit-cadet]");
