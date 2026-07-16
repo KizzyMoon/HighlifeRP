@@ -515,6 +515,14 @@ label {
   display: grid;
   grid-template-columns: minmax(0, 1.08fr) minmax(340px, 0.92fr);
   align-items: stretch;
+  grid-auto-rows: 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.morgue-stack {
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 14px;
   margin-bottom: 14px;
 }
@@ -554,6 +562,7 @@ label {
 }
 
 .cheat-top-grid .cheat-panel {
+  height: 100%;
   padding: 14px 16px;
 }
 
