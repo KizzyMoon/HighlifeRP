@@ -18,6 +18,7 @@
           <button class="active" data-tab="overview" type="button">Overview</button>
           <button data-tab="cadets" type="button">Cadets</button>
           <button data-tab="directory" type="button">Directory</button>
+          <button data-tab="cheat-sheet" type="button">Cheat Sheet</button>
           <button data-tab="notes" type="button">Notes</button>
           <button data-tab="settings" type="button">Settings</button>
         </nav>
@@ -85,6 +86,88 @@
           </div>
           <div class="directory" data-directory></div>
         </article>
+      </section>
+
+      <section class="view is-hidden" data-view="cheat-sheet">
+        <div class="cheat-hero">
+          <div>
+            <span class="cheat-mark">+</span>
+            <p>Highlife RP reference</p>
+            <h1>EMS Quick Cheat Sheet</h1>
+          </div>
+          <div class="cheat-chip">Non-responsive: <strong>500 days</strong></div>
+        </div>
+
+        <div class="cheat-grid">
+          <article class="cheat-panel morgue-card">
+            <div class="cheat-title">
+              <span>PT</span>
+              <h2>Morgue Format - Regular PT</h2>
+            </div>
+            <dl class="cheat-lines">
+              <div>
+                <dt>Set time for days</dt>
+                <dd>300</dd>
+              </div>
+              <div>
+                <dt>Format</dt>
+                <dd>Reason to Death | TOD: XX:XX</dd>
+              </div>
+              <div>
+                <dt>Example</dt>
+                <dd>DOA for Fatal GSW | TOD 3:25 PM</dd>
+              </div>
+            </dl>
+          </article>
+
+          <article class="cheat-panel morgue-card">
+            <div class="cheat-title">
+              <span>PT</span>
+              <h2>Morgue Format - Criminal PT</h2>
+            </div>
+            <dl class="cheat-lines">
+              <div>
+                <dt>Set time for days</dt>
+                <dd>1000</dd>
+              </div>
+              <div>
+                <dt>Format</dt>
+                <dd>Reason to Death | TOD: XX:XX | Charges</dd>
+              </div>
+              <div>
+                <dt>Example</dt>
+                <dd>DOS for Fatal GSW to the head | TOD: 5:42 AM | Bank Robbery | Attempted Mass Murder | Felony Evading Arrest | Reckless Driving</dd>
+              </div>
+            </dl>
+          </article>
+
+          <article class="cheat-panel vehicle-card seu-card">
+            <div class="cheat-title">
+              <span>SEU</span>
+              <h2>SEU Vehicles</h2>
+            </div>
+            <ul class="vehicle-list">
+              <li><span>CaraCara</span><strong>EMT I+</strong></li>
+              <li><span>Landstalker</span><strong>EMT III+</strong></li>
+              <li><span>Scout</span><strong>Supervisor+</strong></li>
+            </ul>
+            <div class="ratio-pill green">1 SEU : 1 Ambulance</div>
+            <p class="cheat-note">SEU requires a 1:1 ambulance ratio.</p>
+          </article>
+
+          <article class="cheat-panel vehicle-card fr-card">
+            <div class="cheat-title">
+              <span>FR</span>
+              <h2>FR Vehicles</h2>
+            </div>
+            <ul class="vehicle-list">
+              <li><span>Buffalo</span><strong>EMT II+</strong></li>
+              <li><span>Felon</span><strong>EMT IV+</strong></li>
+            </ul>
+            <div class="ratio-pill blue">1 FR : 2 Ambulances</div>
+            <p class="cheat-note">FR is not classed as an ambulance and does not count toward the SEU ratio.</p>
+          </article>
+        </div>
       </section>
 
       <section class="view is-hidden" data-view="notes">

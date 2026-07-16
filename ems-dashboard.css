@@ -442,6 +442,203 @@ label {
   margin: 0;
 }
 
+.cheat-hero {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  border: 1px solid rgba(248, 162, 162, 0.28);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(31, 26, 32, 0.92), rgba(14, 15, 21, 0.96));
+  box-shadow: inset 0 -2px 0 rgba(248, 162, 162, 0.32);
+  margin-bottom: 14px;
+  padding: 18px;
+}
+
+.cheat-hero > div:first-child {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 14px;
+  align-items: center;
+}
+
+.cheat-mark {
+  grid-row: span 2;
+  display: inline-grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border: 2px solid rgba(248, 162, 162, 0.75);
+  border-radius: 14px;
+  background: rgba(248, 162, 162, 0.14);
+  color: var(--accent);
+  font-size: 2.2rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.cheat-hero p {
+  margin: 0;
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.cheat-hero h1 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(1.8rem, 4vw, 3.2rem);
+  line-height: 1;
+}
+
+.cheat-chip {
+  border: 1px solid rgba(248, 162, 162, 0.55);
+  border-radius: 8px;
+  background: rgba(32, 21, 27, 0.62);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 900;
+  padding: 12px 14px;
+  white-space: nowrap;
+}
+
+.cheat-chip strong {
+  color: var(--accent);
+}
+
+.cheat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.cheat-panel {
+  border: 1px solid rgba(248, 162, 162, 0.22);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(31, 26, 32, 0.92), rgba(18, 18, 25, 0.96));
+  padding: 18px;
+}
+
+.morgue-card {
+  min-height: 290px;
+}
+
+.vehicle-card {
+  min-height: 230px;
+}
+
+.seu-card {
+  border-color: rgba(130, 230, 179, 0.3);
+}
+
+.fr-card {
+  border-color: rgba(143, 182, 255, 0.34);
+}
+
+.cheat-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid rgba(248, 162, 162, 0.22);
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+}
+
+.cheat-title span {
+  display: inline-grid;
+  place-items: center;
+  min-width: 42px;
+  height: 34px;
+  border: 1px solid rgba(248, 162, 162, 0.48);
+  border-radius: 8px;
+  background: rgba(248, 162, 162, 0.12);
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.cheat-title h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.2rem;
+}
+
+.cheat-lines {
+  display: grid;
+  gap: 0;
+  margin: 0;
+}
+
+.cheat-lines div {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 13px 0;
+}
+
+.cheat-lines div:last-child {
+  border-bottom: 0;
+}
+
+.cheat-lines dt {
+  color: var(--accent);
+  font-weight: 900;
+}
+
+.cheat-lines dd {
+  margin: 0;
+  color: #fff;
+  line-height: 1.35;
+}
+
+.vehicle-list {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+}
+
+.vehicle-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+  color: #fff;
+  padding: 9px 10px;
+}
+
+.vehicle-list strong {
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.ratio-pill {
+  display: inline-flex;
+  border-radius: 999px;
+  font-weight: 900;
+  margin-bottom: 10px;
+  padding: 8px 14px;
+}
+
+.ratio-pill.green {
+  background: rgba(130, 230, 179, 0.16);
+  color: var(--green);
+}
+
+.ratio-pill.blue {
+  background: rgba(143, 182, 255, 0.16);
+  color: #8fb6ff;
+}
+
+.cheat-note {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
 .empty {
   border: 1px dashed var(--line);
   border-radius: 8px;
@@ -545,7 +742,18 @@ menu {
   .directory-row,
   .note-row,
   .form-grid,
-  .settings-grid {
+  .settings-grid,
+  .cheat-grid,
+  .cheat-lines div {
+    grid-template-columns: 1fr;
+  }
+
+  .cheat-hero {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .cheat-hero > div:first-child {
     grid-template-columns: 1fr;
   }
 }
