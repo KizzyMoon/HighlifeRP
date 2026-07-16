@@ -514,6 +514,7 @@ label {
 .cheat-top-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.08fr) minmax(340px, 0.92fr);
+  align-items: stretch;
   gap: 14px;
   margin-bottom: 14px;
 }
@@ -549,7 +550,6 @@ label {
 
 .cheat-panel.icu-card {
   grid-column: auto;
-  align-self: start;
 }
 
 .cheat-top-grid .cheat-panel {
