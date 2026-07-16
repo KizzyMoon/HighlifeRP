@@ -27,6 +27,8 @@ let googleAccessToken = "";
 
 const els = {
   lastUpdated: document.querySelector("[data-last-updated]"),
+  toolbar: document.querySelector(".toolbar"),
+  sourcePanel: document.querySelector(".source-panel"),
   stats: document.querySelector("[data-stats]"),
   googleUrl: document.querySelector("[data-google-url]"),
   rosterUrl: document.querySelector("[data-roster-url]"),
@@ -895,7 +897,10 @@ function setActiveTab(tabName) {
   localStorage.setItem(ACTIVE_TAB_KEY, activeTab);
   els.tabs.forEach((button) => button.classList.toggle("active", button.dataset.tab === activeTab));
   els.views.forEach((view) => view.classList.toggle("is-hidden", view.dataset.view !== activeTab));
-  els.stats.classList.toggle("is-hidden", activeTab === "cheat-sheet");
+  const isCheatSheet = activeTab === "cheat-sheet";
+  els.toolbar.classList.toggle("is-hidden", isCheatSheet);
+  els.sourcePanel.classList.toggle("is-hidden", isCheatSheet);
+  els.stats.classList.toggle("is-hidden", isCheatSheet);
 }
 
 function field(name, label, value = "", type = "text", extra = "") {
