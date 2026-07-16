@@ -527,7 +527,8 @@ label {
 }
 
 .morgue-card {
-  min-height: 290px;
+  grid-column: 1 / -1;
+  min-height: 0;
 }
 
 .vehicle-card {
