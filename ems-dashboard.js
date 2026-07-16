@@ -1,4 +1,5 @@
 const STORAGE_KEY = "highlife-ems-dashboard-v1";
+const ACTIVE_TAB_KEY = "highlife-ems-active-tab";
 const DEFAULT_SHEET_URL = "https://docs.google.com/spreadsheets/d/1g3XXntoqyA9XMgEcXwq89RyqBUymJCpVbG1vlE4BSPY/edit?gid=1321749468#gid=1321749468";
 const DEFAULT_ROSTER_URL = "https://docs.google.com/spreadsheets/d/1b9RV4HZh2Klex6jEq8YarlpzpDMt0F4ohV_GscHbSb8/edit?gid=647224122#gid=647224122";
 const DEFAULT_MY_CALLSIGN = "M3-18";
@@ -20,7 +21,7 @@ const RANK_ORDER = [
 ];
 
 const state = loadState();
-let activeTab = "overview";
+let activeTab = localStorage.getItem(ACTIVE_TAB_KEY) || "overview";
 let googleTokenClient = null;
 let googleAccessToken = "";
 
@@ -889,7 +890,9 @@ function render() {
 }
 
 function setActiveTab(tabName) {
-  activeTab = tabName;
+  const tabExists = [...els.tabs].some((button) => button.dataset.tab === tabName);
+  activeTab = tabExists ? tabName : "overview";
+  localStorage.setItem(ACTIVE_TAB_KEY, activeTab);
   els.tabs.forEach((button) => button.classList.toggle("active", button.dataset.tab === activeTab));
   els.views.forEach((view) => view.classList.toggle("is-hidden", view.dataset.view !== activeTab));
   els.stats.classList.toggle("is-hidden", activeTab === "cheat-sheet");
@@ -1082,3 +1085,4 @@ els.dialogForm.addEventListener("submit", (event) => {
 });
 
 render();
+setActiveTab(activeTab);
