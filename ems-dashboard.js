@@ -813,7 +813,6 @@ function overviewCadetCard(cadet, options = {}) {
       <div class="pill-row">
         ${options.showRaPill ? needsRa(cadet) ? pill("Needs my RA", "bad") : pill("My RA done", "good") : ""}
         ${missingTraining}
-        ${trainingPill(cadet)}
         ${limitPill("14 day", cadet.day14Due, 3)}
         ${limitPill("28 day", cadet.day28Due, 7)}
       </div>
@@ -825,8 +824,9 @@ function overviewCadetCard(cadet, options = {}) {
 
 function renderStats() {
   const cadets = state.cadets;
-  const needsRaCount = cadets.filter(needsRa).length;
-  const limitCount = cadets.filter(limitRisk).length;
+  const overviewCadets = cadets.filter((cadet) => cadet.day1);
+  const needsRaCount = overviewCadets.filter(needsRa).length;
+  const limitCount = overviewCadets.filter(limitRisk).length;
   const trainingCount = cadets.filter((cadet) => !cadet.day1 || !cadet.day2).length;
   els.stats.innerHTML = [
     ["Cadets", cadets.length],
@@ -839,7 +839,7 @@ function renderStats() {
 }
 
 function renderOverview() {
-  const cadets = filteredCadets();
+  const cadets = filteredCadets().filter((cadet) => cadet.day1);
   const needsRaItems = cadets.filter(needsRa);
   const limitItems = cadets.filter(limitRisk);
   els.needsRaCount.textContent = needsRaItems.length;
