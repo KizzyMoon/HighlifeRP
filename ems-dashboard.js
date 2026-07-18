@@ -51,7 +51,8 @@ const els = {
   dialogTitle: document.querySelector("[data-dialog-title]"),
   dialogBody: document.querySelector("[data-dialog-body]"),
   myCallsign: document.querySelector("[data-my-callsign]"),
-  settingsSummary: document.querySelector("[data-settings-summary]")
+  settingsSummary: document.querySelector("[data-settings-summary]"),
+  googleEmail: document.querySelector("[data-google-email]")
 };
 
 function loadState() {
@@ -97,7 +98,8 @@ function cellText(cell = {}) {
 
 function normalizeSettings(raw = {}) {
   return {
-    myCallsign: normalizeCallsign(raw.myCallsign || DEFAULT_MY_CALLSIGN)
+    myCallsign: normalizeCallsign(raw.myCallsign || DEFAULT_MY_CALLSIGN),
+    googleEmail: String(raw.googleEmail || "").trim()
   };
 }
 
@@ -397,16 +399,20 @@ function waitForGoogleIdentity() {
 }
 
 async function ensureGoogleAccessToken(options = {}) {
-  const prompt = options.prompt ?? "consent";
+  const prompt = options.prompt ?? "";
+  const loginHint = String(options.loginHint || state.settings?.googleEmail || "").trim();
   if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === "PASTE_GOOGLE_CLIENT_ID_HERE") {
     throw new Error("Google sign-in needs a Google OAuth Client ID added to ems-dashboard.js first.");
   }
   if (googleAccessToken) return googleAccessToken;
   await waitForGoogleIdentity();
   return new Promise((resolve, reject) => {
-    googleTokenClient = googleTokenClient || google.accounts.oauth2.initTokenClient({
+    googleTokenClient = google.accounts.oauth2.initTokenClient({
       client_id: GOOGLE_CLIENT_ID,
-      scope: SHEETS_SCOPE
+      scope: SHEETS_SCOPE,
+      include_granted_scopes: true,
+      login_hint: loginHint || undefined,
+      error_callback: (error) => reject(new Error(error?.message || error?.type || "Google sign-in was blocked."))
     });
     googleTokenClient.callback = (response) => {
       if (response.error) return reject(new Error(response.error_description || response.error));
@@ -619,7 +625,7 @@ async function importPrivateRosterSheet(options = {}) {
 
 async function importGoogleSheet(options = {}) {
   const silent = Boolean(options.silent);
-  const tokenOptions = { prompt: options.prompt ?? "consent" };
+  const tokenOptions = { prompt: options.prompt ?? "" };
   let cadetCount = 0;
   let rosterCount = 0;
   const errors = [];
@@ -877,8 +883,10 @@ function renderNotes() {
 
 function renderSettings() {
   if (els.myCallsign) els.myCallsign.value = state.settings?.myCallsign || DEFAULT_MY_CALLSIGN;
+  if (els.googleEmail) els.googleEmail.value = state.settings?.googleEmail || "";
   if (els.settingsSummary) {
-    els.settingsSummary.textContent = `Current RA callsign check: ${state.settings?.myCallsign || DEFAULT_MY_CALLSIGN}`;
+    const email = state.settings?.googleEmail ? ` Google will prefer ${state.settings.googleEmail}.` : " Add your Gmail here so Google can choose the right account.";
+    els.settingsSummary.textContent = `Current RA callsign check: ${state.settings?.myCallsign || DEFAULT_MY_CALLSIGN}.${email}`;
   }
 }
 
@@ -996,7 +1004,12 @@ function saveDialog() {
 }
 
 function saveSettings() {
-  state.settings = normalizeSettings({ myCallsign: els.myCallsign?.value || DEFAULT_MY_CALLSIGN });
+  state.settings = normalizeSettings({
+    myCallsign: els.myCallsign?.value || DEFAULT_MY_CALLSIGN,
+    googleEmail: els.googleEmail?.value || ""
+  });
+  googleAccessToken = "";
+  googleTokenClient = null;
   saveState();
   render();
   alert(`Settings saved. Your RA callsign is ${state.settings.myCallsign}. Sync the sheet again to refresh Needs RA From Me.`);
@@ -1037,7 +1050,11 @@ document.addEventListener("click", async (event) => {
   const action = event.target.closest("[data-action]")?.dataset.action;
   if (action === "google-sign-in") {
     try {
-      await ensureGoogleAccessToken();
+      try {
+        await ensureGoogleAccessToken({ prompt: "" });
+      } catch {
+        await ensureGoogleAccessToken({ prompt: "consent" });
+      }
       alert("Google sign-in connected. You can now sync the sheet.");
     } catch (error) {
       alert(error.message);
