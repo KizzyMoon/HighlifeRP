@@ -50,6 +50,7 @@ const els = {
   dialogForm: document.querySelector("[data-dialog-form]"),
   dialogTitle: document.querySelector("[data-dialog-title]"),
   dialogBody: document.querySelector("[data-dialog-body]"),
+  dialogSave: document.querySelector("[data-dialog-save]"),
   myCallsign: document.querySelector("[data-my-callsign]"),
   settingsSummary: document.querySelector("[data-settings-summary]"),
   googleEmail: document.querySelector("[data-google-email]")
@@ -198,7 +199,8 @@ function normalizeCadet(raw = {}) {
     day2: Boolean(raw.day2),
     needsWork: raw.needsWork || "",
     sheetUrl: raw.sheetUrl || "",
-    notes: raw.notes || ""
+    notes: raw.notes || "",
+    sheetNotes: Array.isArray(raw.sheetNotes) ? raw.sheetNotes.filter(Boolean) : []
   };
 }
 
@@ -465,7 +467,7 @@ async function applyMyRaFromCadetTabs(spreadsheetId, sheets = [], options = {}) 
   const titles = new Set(sheets.map((entry) => entry.properties?.title).filter(Boolean));
   const targets = state.cadets
     .filter((cadet) => cadet.callsign && titles.has(cadet.callsign))
-    .map((cadet) => ({ cadet, range: sheetRange(cadet.callsign, "A1:Z130") }));
+    .map((cadet) => ({ cadet, range: sheetRange(cadet.callsign, "A1:Z260") }));
   if (!targets.length) return;
   const ranges = targets.map((target) => `ranges=${encodeURIComponent(target.range)}`).join("&");
   const fields = encodeURIComponent("sheets(properties(title),data(rowData(values(formattedValue,effectiveFormat(backgroundColor,backgroundColorStyle(rgbColor))))))");
@@ -478,6 +480,7 @@ async function applyMyRaFromCadetTabs(spreadsheetId, sheets = [], options = {}) 
     const score = cadetTrainingScore(sheet);
     cadet.trainingAverage = score.average;
     cadet.trainingAssessments = score.count;
+    cadet.sheetNotes = cadetSheetNotes(sheet);
   });
   saveState();
   render();
@@ -541,6 +544,27 @@ function cadetHasRaCallsign(rows = [], myCallsign = "") {
   return values
     .slice(Math.max(labelIndex + 1, 0))
     .some((cell) => normalizeCallsign(cellText(cell)) === target);
+}
+
+function cadetSheetNotes(sheet = {}) {
+  const rows = sheet.data?.[0]?.rowData || [];
+  const noteRows = rows.map((row) => (
+    (row.values || [])
+      .map(cellText)
+      .filter(Boolean)
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .trim()
+  ));
+  let startIndex = noteRows.findIndex((text) => {
+    const key = normalizeKey(text);
+    return key.includes("commentssummary") || key.includes("summaryduringtheridealong");
+  });
+  startIndex = startIndex >= 0 ? startIndex + 1 : Math.max(0, noteRows.length - 35);
+  return noteRows
+    .slice(startIndex)
+    .filter((text) => text && !normalizeKey(text).includes("commentssummary"))
+    .slice(0, 24);
 }
 
 function assessmentScoreFromCell(cell = {}, rowIndex = 0, columnIndex = 0) {
@@ -765,7 +789,7 @@ function cadetCard(cadet, options = {}) {
   ].join("");
   const raPill = options.hideRaPill ? "" : needsRa(cadet) ? pill("Needs my RA", "bad") : pill("My RA done", "good");
   return `
-    <article class="card training-${trainingLevel(cadet)}">
+    <article class="card training-${trainingLevel(cadet)}" data-view-sheet-notes="${cadet.id}" tabindex="0" role="button" aria-label="View sheet notes for ${escapeHtml(cadet.name || "cadet")}">
       <div class="card-head">
         <div>
           <h3>${escapeHtml(cadet.name || "Unnamed cadet")}</h3>
@@ -800,7 +824,7 @@ function overviewCadetCard(cadet, options = {}) {
     cadet.day2 ? "" : pill("No Day 2", "warn")
   ].join("");
   return `
-    <article class="card training-${trainingLevel(cadet)}">
+    <article class="card training-${trainingLevel(cadet)}" data-view-sheet-notes="${cadet.id}" tabindex="0" role="button" aria-label="View sheet notes for ${escapeHtml(cadet.name || "cadet")}">
       <div class="card-head">
         <div>
           <h3>${escapeHtml(cadet.name || "Unnamed cadet")}</h3>
@@ -925,6 +949,7 @@ function checkbox(name, label, checked = false) {
 
 function openCadetForm(cadet = null) {
   const item = normalizeCadet(cadet || {});
+  setDialogReadonly(false);
   els.dialogTitle.textContent = cadet ? "Edit Cadet" : "Add Cadet";
   els.dialogBody.innerHTML = `
     <div class="form-grid">
@@ -952,6 +977,7 @@ function openCadetForm(cadet = null) {
 
 function openMemberForm(member = null) {
   const item = normalizeMember(member || {});
+  setDialogReadonly(false);
   els.dialogTitle.textContent = member ? "Edit EMS Member" : "Add EMS Member";
   els.dialogBody.innerHTML = `
     <div class="form-grid">
@@ -969,9 +995,29 @@ function openMemberForm(member = null) {
 }
 
 function openNoteForm(cadet) {
+  setDialogReadonly(false);
   els.dialogTitle.textContent = `Add Note - ${cadet.name || "Cadet"}`;
   els.dialogBody.innerHTML = `<label>Note<textarea name="note" required></textarea></label>`;
   els.dialog.dataset.mode = "note";
+  els.dialog.dataset.id = cadet.id;
+  els.dialog.showModal();
+}
+
+function setDialogReadonly(readonly) {
+  if (els.dialogSave) els.dialogSave.classList.toggle("is-hidden", readonly);
+}
+
+function openCadetSheetNotes(cadet) {
+  if (!cadet) return;
+  setDialogReadonly(true);
+  const notes = Array.isArray(cadet.sheetNotes) ? cadet.sheetNotes : [];
+  els.dialogTitle.textContent = `${cadet.name || "Cadet"} - Sheet Notes`;
+  els.dialogBody.innerHTML = notes.length ? `
+    <div class="sheet-note-list">
+      ${notes.map((note) => `<p>${escapeHtml(note)}</p>`).join("")}
+    </div>
+  ` : `<div class="empty">No personal sheet notes synced yet. Click Sync Sheet after signing in, or check that ${escapeHtml(cadet.callsign || "this cadet")} has notes at the bottom of their sheet.</div>`;
+  els.dialog.dataset.mode = "sheet-notes";
   els.dialog.dataset.id = cadet.id;
   els.dialog.showModal();
 }
@@ -1090,6 +1136,12 @@ document.addEventListener("click", async (event) => {
   const noteCadet = event.target.closest("[data-note-cadet]");
   if (noteCadet) openNoteForm(state.cadets.find((cadet) => cadet.id === noteCadet.dataset.noteCadet));
 
+  const sheetNotesCard = event.target.closest("[data-view-sheet-notes]");
+  const clickedControl = event.target.closest("button, a, input, select, textarea, label");
+  if (sheetNotesCard && !clickedControl) {
+    openCadetSheetNotes(state.cadets.find((cadet) => cadet.id === sheetNotesCard.dataset.viewSheetNotes));
+  }
+
   const raDone = event.target.closest("[data-ra-done]");
   if (raDone) {
     const cadet = state.cadets.find((entry) => entry.id === raDone.dataset.raDone);
@@ -1101,6 +1153,14 @@ document.addEventListener("click", async (event) => {
       render();
     }
   }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (!["Enter", " "].includes(event.key)) return;
+  const sheetNotesCard = event.target.closest("[data-view-sheet-notes]");
+  if (!sheetNotesCard) return;
+  event.preventDefault();
+  openCadetSheetNotes(state.cadets.find((cadet) => cadet.id === sheetNotesCard.dataset.viewSheetNotes));
 });
 
 async function autoSyncGoogleSheets() {

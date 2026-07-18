@@ -263,6 +263,18 @@ label {
   background: linear-gradient(180deg, rgba(31, 26, 32, 0.94), rgba(22, 19, 25, 0.94));
 }
 
+.card[data-view-sheet-notes] {
+  cursor: pointer;
+  transition: border-color 0.16s ease, transform 0.16s ease;
+}
+
+.card[data-view-sheet-notes]:hover,
+.card[data-view-sheet-notes]:focus-visible {
+  border-color: rgba(248, 162, 162, 0.52);
+  outline: none;
+  transform: translateY(-1px);
+}
+
 .card.training-good {
   border-color: rgba(130, 230, 179, 0.3);
   background: linear-gradient(90deg, rgba(130, 230, 179, 0.08), rgba(31, 26, 32, 0.96) 22%);
@@ -835,6 +847,23 @@ dialog h2 {
 textarea {
   min-height: 110px;
   resize: vertical;
+}
+
+.sheet-note-list {
+  display: grid;
+  gap: 8px;
+  max-height: min(58vh, 560px);
+  overflow: auto;
+}
+
+.sheet-note-list p {
+  margin: 0;
+  border: 1px solid rgba(248, 162, 162, 0.16);
+  border-radius: 7px;
+  background: rgba(9, 10, 16, 0.36);
+  color: #ffe7e7;
+  line-height: 1.35;
+  padding: 9px 10px;
 }
 
 .full {
