@@ -178,6 +178,7 @@ function normalizeCadet(raw = {}) {
   const day14Due = parseDate(raw.day14Due || raw.fourteenDayDue || raw["14day"]) || addDays(startDate, 14);
   const day28Due = parseDate(raw.day28Due || raw.twentyEightDayDue || raw["28day"]) || addDays(startDate, 28);
   const trainingAverage = raw.trainingAverage === null || raw.trainingAverage === undefined || raw.trainingAverage === "" ? null : Number(raw.trainingAverage);
+  const trainingOverallAverage = raw.trainingOverallAverage === null || raw.trainingOverallAverage === undefined || raw.trainingOverallAverage === "" ? null : Number(raw.trainingOverallAverage);
   return {
     id: raw.id || crypto.randomUUID(),
     employeeNumber: raw.employeeNumber || "",
@@ -194,6 +195,9 @@ function normalizeCadet(raw = {}) {
     raCompleted: Boolean(raw.raCompleted),
     myRaCompleted: Boolean(raw.myRaCompleted),
     trainingAverage: Number.isNaN(trainingAverage) ? null : trainingAverage,
+    trainingOverallAverage: Number.isNaN(trainingOverallAverage) ? null : trainingOverallAverage,
+    trainingTrend: raw.trainingTrend || "none",
+    trainingRaCount: Number(raw.trainingRaCount || 0),
     trainingAssessments: Number(raw.trainingAssessments || 0),
     day1: Boolean(raw.day1),
     day2: Boolean(raw.day2),
@@ -479,6 +483,9 @@ async function applyMyRaFromCadetTabs(spreadsheetId, sheets = [], options = {}) 
     if (myCallsign) cadet.myRaCompleted = cadetHasRaCallsign(cells, myCallsign);
     const score = cadetTrainingScore(sheet);
     cadet.trainingAverage = score.average;
+    cadet.trainingOverallAverage = score.overallAverage;
+    cadet.trainingTrend = score.trend;
+    cadet.trainingRaCount = score.raCount;
     cadet.trainingAssessments = score.count;
     cadet.sheetNotes = cadetSheetNotes(sheet);
   });
@@ -580,9 +587,15 @@ function assessmentScoreFromCell(cell = {}, rowIndex = 0, columnIndex = 0) {
   return null;
 }
 
+function averageScore(scores = []) {
+  if (!scores.length) return null;
+  return Number((scores.reduce((sum, score) => sum + score, 0) / scores.length).toFixed(2));
+}
+
 function cadetTrainingScore(sheet = {}) {
   let total = 0;
   let count = 0;
+  const columnScores = new Map();
   const rows = sheet.data?.[0]?.rowData || [];
   rows.forEach((row, rowIndex) => {
     (row.values || []).forEach((cell, columnIndex) => {
@@ -590,12 +603,25 @@ function cadetTrainingScore(sheet = {}) {
       if (score !== null) {
         total += score;
         count += 1;
+        columnScores.set(columnIndex, [...(columnScores.get(columnIndex) || []), score]);
       }
     });
   });
+  const raAverages = [...columnScores.entries()]
+    .sort(([columnA], [columnB]) => columnA - columnB)
+    .map(([columnIndex, scores]) => ({ columnIndex, average: averageScore(scores), count: scores.length }))
+    .filter((entry) => entry.count);
+  const first = raAverages[0]?.average ?? null;
+  const latest = raAverages[raAverages.length - 1]?.average ?? null;
+  const change = first !== null && latest !== null ? Number((first - latest).toFixed(2)) : 0;
+  const trend = raAverages.length < 2 ? "single" : change >= 0.25 ? "improving" : change <= -0.25 ? "slipping" : "steady";
   return {
-    average: count ? Number((total / count).toFixed(2)) : null,
-    count
+    average: latest,
+    overallAverage: count ? Number((total / count).toFixed(2)) : null,
+    count,
+    raCount: raAverages.length,
+    firstAverage: first,
+    trend
   };
 }
 
@@ -770,16 +796,20 @@ function limitPill(label, dueDate, dangerAt) {
 function trainingLevel(cadet) {
   const average = Number(cadet.trainingAverage);
   if (!average || Number.isNaN(average)) return "none";
-  if (average <= 1.35) return "good";
-  if (average <= 1.9) return "warn";
+  if (average < 1.5) return "good";
+  if (average < 2.5) return "warn";
   return "bad";
 }
 
 function trainingPill(cadet) {
   const average = Number(cadet.trainingAverage);
   if (!average || Number.isNaN(average)) return pill("No avg", "zone");
-  const label = trainingLevel(cadet) === "good" ? "Confident" : trainingLevel(cadet) === "warn" ? "Developing" : "Needs attention";
-  return pill(`${label} ${average.toFixed(2)}`, trainingLevel(cadet));
+  const level = trainingLevel(cadet);
+  const trend = cadet.trainingTrend || "none";
+  const base = level === "good" ? "Good" : level === "warn" ? "Needs time" : "Struggling";
+  const label = trend === "improving" ? "Improving" : trend === "slipping" ? "Needs attention" : base;
+  const raText = cadet.trainingRaCount > 1 ? ` latest ${average.toFixed(2)}` : ` avg ${average.toFixed(2)}`;
+  return pill(`${label}${raText}`, level);
 }
 
 function cadetCard(cadet, options = {}) {
