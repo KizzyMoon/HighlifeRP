@@ -19,6 +19,19 @@ const RANK_ORDER = [
   "Probationer",
   "Cadet"
 ];
+const TRAINING_SECTIONS = [
+  "General",
+  "Day 1 Training",
+  "F5 Menu",
+  "Object Menu",
+  "EMT Actions",
+  "Basic Treatments/Procedures",
+  "Day 2 Training",
+  "Intermediate Treatments",
+  "PD Scenes",
+  "Field Training",
+  "10-Codes/Radio"
+];
 
 const state = loadState();
 let activeTab = localStorage.getItem(ACTIVE_TAB_KEY) || "overview";
@@ -199,8 +212,8 @@ function normalizeCadet(raw = {}) {
     trainingTrend: raw.trainingTrend || "none",
     trainingRaCount: Number(raw.trainingRaCount || 0),
     trainingAssessments: Number(raw.trainingAssessments || 0),
-    latestStruggles: Array.isArray(raw.latestStruggles) ? raw.latestStruggles.filter(Boolean) : [],
-    unassessedItems: Array.isArray(raw.unassessedItems) ? raw.unassessedItems.filter(Boolean) : [],
+    latestStruggles: normalizeFocusGroups(raw.latestStruggles),
+    unassessedItems: normalizeFocusGroups(raw.unassessedItems),
     day1: Boolean(raw.day1),
     day2: Boolean(raw.day2),
     needsWork: raw.needsWork || "",
@@ -605,8 +618,8 @@ function cellChecked(cell = {}) {
   return boolValue(cellText(cell));
 }
 
-function trainingRowLabel(cells = []) {
-  const labels = cells
+function trainingLabelCandidates(cells = []) {
+  return cells
     .slice(0, 6)
     .map(cellText)
     .map((text) => text.replace(/\s+/g, " ").trim())
@@ -620,6 +633,18 @@ function trainingRowLabel(cells = []) {
         && key !== "general"
         && !["1", "2", "3", "blank", "true", "false", "yes", "no"].includes(key);
     });
+}
+
+function trainingSectionLabel(cells = []) {
+  const candidates = trainingLabelCandidates(cells);
+  const found = candidates.find((label) => TRAINING_SECTIONS.some((section) => normalizeKey(section) === normalizeKey(label)));
+  if (!found) return "";
+  return TRAINING_SECTIONS.find((section) => normalizeKey(section) === normalizeKey(found)) || found;
+}
+
+function trainingRowLabel(cells = []) {
+  if (trainingSectionLabel(cells)) return "";
+  const labels = trainingLabelCandidates(cells);
   const label = labels[labels.length - 1] || "";
   const key = normalizeKey(label);
   if (!label || key.includes("training") || key.includes("treatmentsprocedures") || key.includes("pdscenes") || key.includes("emtactions") || key.includes("objectmenu")) {
@@ -637,14 +662,40 @@ function averageScore(scores = []) {
   return Number((scores.reduce((sum, score) => sum + score, 0) / scores.length).toFixed(2));
 }
 
+function groupFocusItems(rows = []) {
+  const groups = new Map();
+  rows.forEach(({ group, item }) => {
+    const groupName = group || "Other";
+    if (!groups.has(groupName)) groups.set(groupName, new Set());
+    groups.get(groupName).add(item);
+  });
+  return [...groups.entries()].map(([group, items]) => ({ group, items: [...items] }));
+}
+
+function normalizeFocusGroups(raw = []) {
+  if (!Array.isArray(raw)) return [];
+  if (raw.some((entry) => entry && typeof entry === "object" && Array.isArray(entry.items))) {
+    return raw
+      .map((entry) => ({
+        group: String(entry.group || "Other"),
+        items: Array.isArray(entry.items) ? entry.items.filter(Boolean) : []
+      }))
+      .filter((entry) => entry.items.length);
+  }
+  return raw.filter(Boolean);
+}
+
 function cadetTrainingScore(sheet = {}) {
   let total = 0;
   let count = 0;
   const columnScores = new Map();
   const rowDetails = [];
   const rows = sheet.data?.[0]?.rowData || [];
+  let currentSection = "General";
   rows.forEach((row, rowIndex) => {
     const cells = row.values || [];
+    const section = trainingSectionLabel(cells);
+    if (section) currentSection = section;
     const label = trainingRowLabel(cells);
     let latestScore = null;
     let latestColumn = null;
@@ -660,7 +711,7 @@ function cadetTrainingScore(sheet = {}) {
         latestColumn = columnIndex;
       }
     });
-    if (label) rowDetails.push({ label, required: isRequiredTrainingRow(cells), hasAnyScore, latestScore, latestColumn });
+    if (label) rowDetails.push({ label, group: currentSection, required: isRequiredTrainingRow(cells), hasAnyScore, latestScore, latestColumn });
   });
   const raAverages = [...columnScores.entries()]
     .sort(([columnA], [columnB]) => columnA - columnB)
@@ -673,10 +724,10 @@ function cadetTrainingScore(sheet = {}) {
   const trend = raAverages.length < 2 ? "single" : change >= 0.25 ? "improving" : change <= -0.25 ? "slipping" : "steady";
   const latestStruggles = rowDetails
     .filter((row) => row.latestColumn === latestColumn && row.latestScore >= 2)
-    .map((row) => `${row.label} (${row.latestScore === 3 ? "red" : "orange"})`);
+    .map((row) => ({ group: row.group, item: `${row.label} (${row.latestScore === 3 ? "red" : "orange"})` }));
   const unassessedItems = rowDetails
     .filter((row) => row.required && !row.hasAnyScore)
-    .map((row) => row.label);
+    .map((row) => ({ group: row.group, item: row.label }));
   return {
     average: latest,
     overallAverage: count ? Number((total / count).toFixed(2)) : null,
@@ -684,8 +735,8 @@ function cadetTrainingScore(sheet = {}) {
     raCount: raAverages.length,
     firstAverage: first,
     trend,
-    latestStruggles: [...new Set(latestStruggles)],
-    unassessedItems: [...new Set(unassessedItems)]
+    latestStruggles: groupFocusItems(latestStruggles),
+    unassessedItems: groupFocusItems(unassessedItems)
   };
 }
 
@@ -1106,13 +1157,34 @@ function setDialogReadonly(readonly) {
 }
 
 function sheetList(items = [], emptyText = "Nothing listed yet.") {
+  if (items.some((item) => item && typeof item === "object" && Array.isArray(item.items))) {
+    const groups = items
+      .map((group) => ({
+        group: group.group || "Other",
+        items: cleanFocusItems(group.items || [])
+      }))
+      .filter((group) => group.items.length);
+    return groups.length
+      ? `<div class="focus-groups">${groups.map((group) => `
+        <div class="focus-group">
+          <h4>${escapeHtml(group.group)}</h4>
+          <ul>${group.items.map((item) => `<li class="${focusItemClass(item)}">${escapeHtml(item)}</li>`).join("")}</ul>
+        </div>
+      `).join("")}</div>`
+      : `<p class="muted">${escapeHtml(emptyText)}</p>`;
+  }
+  const cleanItems = cleanFocusItems(items);
+  return cleanItems.length
+    ? `<ul>${cleanItems.map((item) => `<li class="${focusItemClass(item)}">${escapeHtml(item)}</li>`).join("")}</ul>`
+    : `<p class="muted">${escapeHtml(emptyText)}</p>`;
+}
+
+function cleanFocusItems(items = []) {
   const cleanItems = items.filter((item) => {
     const key = normalizeKey(item);
     return key && !["true", "false", "truered", "falseorange", "falsered"].includes(key);
   });
-  return cleanItems.length
-    ? `<ul>${cleanItems.map((item) => `<li class="${focusItemClass(item)}">${escapeHtml(item)}</li>`).join("")}</ul>`
-    : `<p class="muted">${escapeHtml(emptyText)}</p>`;
+  return [...new Set(cleanItems)];
 }
 
 function focusItemClass(item = "") {

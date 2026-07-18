@@ -893,6 +893,25 @@ textarea {
   padding: 0;
 }
 
+.focus-groups {
+  display: grid;
+  gap: 9px;
+}
+
+.focus-group {
+  display: grid;
+  gap: 5px;
+}
+
+.focus-group h4 {
+  margin: 0;
+  border-bottom: 1px solid rgba(248, 162, 162, 0.18);
+  color: #ffd0d0;
+  font-size: 0.76rem;
+  letter-spacing: 0.02em;
+  padding-bottom: 4px;
+}
+
 .cadet-focus li {
   display: block;
   border: 1px solid rgba(248, 162, 162, 0.14);
