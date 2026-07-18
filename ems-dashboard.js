@@ -396,7 +396,8 @@ function waitForGoogleIdentity() {
   });
 }
 
-async function ensureGoogleAccessToken() {
+async function ensureGoogleAccessToken(options = {}) {
+  const prompt = options.prompt ?? "consent";
   if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === "PASTE_GOOGLE_CLIENT_ID_HERE") {
     throw new Error("Google sign-in needs a Google OAuth Client ID added to ems-dashboard.js first.");
   }
@@ -413,12 +414,12 @@ async function ensureGoogleAccessToken() {
       if (!googleAccessToken) return reject(new Error("Google did not return an access token."));
       resolve(googleAccessToken);
     };
-    googleTokenClient.requestAccessToken({ prompt: "consent" });
+    googleTokenClient.requestAccessToken({ prompt });
   });
 }
 
-async function fetchSheetJson(url) {
-  const token = await ensureGoogleAccessToken();
+async function fetchSheetJson(url, options = {}) {
+  const token = await ensureGoogleAccessToken(options);
   const response = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` }
   });
@@ -430,16 +431,16 @@ async function fetchSheetJson(url) {
   return response.json();
 }
 
-async function sheetTitleFromInfo(id, gid) {
-  const metadata = await fetchSheetJson(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(id)}?fields=sheets.properties(sheetId,title)`);
+async function sheetTitleFromInfo(id, gid, options = {}) {
+  const metadata = await fetchSheetJson(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(id)}?fields=sheets.properties(sheetId,title)`, options);
   const sheet = (metadata.sheets || []).find((entry) => String(entry.properties?.sheetId) === String(gid)) || metadata.sheets?.[0];
   const title = sheet?.properties?.title;
   if (!title) throw new Error("Could not find that sheet tab.");
   return title;
 }
 
-async function sheetMetadata(id) {
-  return fetchSheetJson(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(id)}?fields=sheets.properties(sheetId,title)`);
+async function sheetMetadata(id, options = {}) {
+  return fetchSheetJson(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(id)}?fields=sheets.properties(sheetId,title)`, options);
 }
 
 function findSheetTitle(sheets = [], gid) {
@@ -453,7 +454,7 @@ function sheetRange(title, range = "A1:Z220") {
   return `'${String(title).replace(/'/g, "''")}'!${range}`;
 }
 
-async function applyMyRaFromCadetTabs(spreadsheetId, sheets = []) {
+async function applyMyRaFromCadetTabs(spreadsheetId, sheets = [], options = {}) {
   const myCallsign = normalizeCallsign(state.settings?.myCallsign);
   const titles = new Set(sheets.map((entry) => entry.properties?.title).filter(Boolean));
   const targets = state.cadets
@@ -462,7 +463,7 @@ async function applyMyRaFromCadetTabs(spreadsheetId, sheets = []) {
   if (!targets.length) return;
   const ranges = targets.map((target) => `ranges=${encodeURIComponent(target.range)}`).join("&");
   const fields = encodeURIComponent("sheets(properties(title),data(rowData(values(formattedValue,effectiveFormat(backgroundColor,backgroundColorStyle(rgbColor))))))");
-  const data = await fetchSheetJson(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}?includeGridData=true&${ranges}&fields=${fields}`);
+  const data = await fetchSheetJson(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}?includeGridData=true&${ranges}&fields=${fields}`, options);
   const byTitle = new Map((data.sheets || []).map((sheet) => [sheet.properties?.title, sheet]));
   targets.forEach(({ cadet }) => {
     const sheet = byTitle.get(cadet.callsign);
@@ -595,33 +596,35 @@ function rowsToObjects(values = [], cellRows = []) {
     });
 }
 
-async function importPrivateGoogleSheet() {
+async function importPrivateGoogleSheet(options = {}) {
   const { id, gid } = sheetInfoFromUrl(els.googleUrl.value);
-  const metadata = await sheetMetadata(id);
+  const metadata = await sheetMetadata(id, options);
   const title = findSheetTitle(metadata.sheets || [], gid);
   const range = encodeURIComponent(`'${title.replace(/'/g, "''")}'`);
-  const values = await fetchSheetJson(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(id)}/values/${range}?majorDimension=ROWS`);
+  const values = await fetchSheetJson(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(id)}/values/${range}?majorDimension=ROWS`, options);
   const count = importRows(rowsFromValues(values.values || []));
-  await applyMyRaFromCadetTabs(id, metadata.sheets || []);
+  await applyMyRaFromCadetTabs(id, metadata.sheets || [], options);
   return count;
 }
 
-async function importPrivateRosterSheet() {
+async function importPrivateRosterSheet(options = {}) {
   const { id, gid } = sheetInfoFromUrl(els.rosterUrl?.value || DEFAULT_ROSTER_URL);
-  const title = await sheetTitleFromInfo(id, gid);
+  const title = await sheetTitleFromInfo(id, gid, options);
   const range = encodeURIComponent(`'${title.replace(/'/g, "''")}'`);
   const fields = encodeURIComponent("sheets(properties(sheetId,title),data(rowData(values(formattedValue,effectiveFormat(backgroundColor,backgroundColorStyle(rgbColor))))))");
-  const spreadsheet = await fetchSheetJson(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(id)}?includeGridData=true&ranges=${range}&fields=${fields}`);
+  const spreadsheet = await fetchSheetJson(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(id)}?includeGridData=true&ranges=${range}&fields=${fields}`, options);
   const sheet = (spreadsheet.sheets || []).find((entry) => String(entry.properties?.sheetId) === String(gid)) || spreadsheet.sheets?.[0];
   return importRosterRows(rowsFromGridSheet(sheet || {}));
 }
 
-async function importGoogleSheet() {
+async function importGoogleSheet(options = {}) {
+  const silent = Boolean(options.silent);
+  const tokenOptions = { prompt: options.prompt ?? "consent" };
   let cadetCount = 0;
   let rosterCount = 0;
   const errors = [];
   try {
-    cadetCount = await importPrivateGoogleSheet();
+    cadetCount = await importPrivateGoogleSheet(tokenOptions);
   } catch (privateError) {
     try {
       const url = googleCsvUrl(els.googleUrl.value);
@@ -635,10 +638,11 @@ async function importGoogleSheet() {
     }
   }
   try {
-    rosterCount = await importPrivateRosterSheet();
+    rosterCount = await importPrivateRosterSheet(tokenOptions);
   } catch (rosterError) {
     errors.push(`Roster sheet: ${rosterError.message}`);
   }
+  if (silent) return { cadetCount, rosterCount, errors };
   if (errors.length) {
     alert(`Synced with issues.\n\nImported ${cadetCount} cadet row(s) and ${rosterCount} roster row(s).\n\n${errors.join("\n")}`);
   } else {
@@ -1082,6 +1086,14 @@ document.addEventListener("click", async (event) => {
   }
 });
 
+async function autoSyncGoogleSheets() {
+  try {
+    await importGoogleSheet({ silent: true, prompt: "" });
+  } catch {
+    // Auto-sync is best-effort. Manual Google Sign In / Sync Sheet will show useful errors.
+  }
+}
+
 els.search.addEventListener("input", render);
 els.statusFilter.addEventListener("change", render);
 
@@ -1091,3 +1103,4 @@ els.dialogForm.addEventListener("submit", (event) => {
 
 render();
 setActiveTab(activeTab);
+autoSyncGoogleSheets();
