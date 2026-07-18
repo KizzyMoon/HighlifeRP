@@ -1111,8 +1111,15 @@ function sheetList(items = [], emptyText = "Nothing listed yet.") {
     return key && !["true", "false", "truered", "falseorange", "falsered"].includes(key);
   });
   return cleanItems.length
-    ? `<ul>${cleanItems.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
+    ? `<ul>${cleanItems.map((item) => `<li class="${focusItemClass(item)}">${escapeHtml(item)}</li>`).join("")}</ul>`
     : `<p class="muted">${escapeHtml(emptyText)}</p>`;
+}
+
+function focusItemClass(item = "") {
+  const key = normalizeKey(item);
+  if (key.includes("red")) return "focus-red";
+  if (key.includes("orange")) return "focus-orange";
+  return "";
 }
 
 function openCadetSheetNotes(cadet) {
