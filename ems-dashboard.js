@@ -618,7 +618,7 @@ function trainingRowLabel(cells = []) {
         && key !== "color"
         && key !== "whatitmeans"
         && key !== "general"
-        && !["1", "2", "3", "blank"].includes(key);
+        && !["1", "2", "3", "blank", "true", "false", "yes", "no"].includes(key);
     });
   const label = labels[labels.length - 1] || "";
   const key = normalizeKey(label);
@@ -1102,8 +1102,12 @@ function setDialogReadonly(readonly) {
 }
 
 function sheetList(items = [], emptyText = "Nothing listed yet.") {
-  return items.length
-    ? `<ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
+  const cleanItems = items.filter((item) => {
+    const key = normalizeKey(item);
+    return key && !["true", "false", "truered", "falseorange", "falsered"].includes(key);
+  });
+  return cleanItems.length
+    ? `<ul>${cleanItems.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
     : `<p class="muted">${escapeHtml(emptyText)}</p>`;
 }
 
