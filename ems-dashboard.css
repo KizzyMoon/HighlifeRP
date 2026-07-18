@@ -670,6 +670,11 @@ label {
   padding: 8px 14px;
 }
 
+.cheat-title .ratio-pill {
+  margin-bottom: 0;
+  padding: 7px 12px;
+}
+
 .ratio-pill.green {
   background: rgba(130, 230, 179, 0.16);
   color: var(--green);
