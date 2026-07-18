@@ -723,6 +723,10 @@ async function importPrivateGoogleSheet(options = {}) {
   const range = encodeURIComponent(`'${title.replace(/'/g, "''")}'`);
   const values = await fetchSheetJson(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(id)}/values/${range}?majorDimension=ROWS`, options);
   const count = importRows(rowsFromValues(values.values || []));
+  state.cadets.forEach((cadet) => {
+    cadet.myRaCompleted = false;
+  });
+  saveState();
   await applyMyRaFromCadetTabs(id, metadata.sheets || [], options);
   return count;
 }
