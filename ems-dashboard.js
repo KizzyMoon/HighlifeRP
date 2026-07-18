@@ -199,6 +199,8 @@ function normalizeCadet(raw = {}) {
     trainingTrend: raw.trainingTrend || "none",
     trainingRaCount: Number(raw.trainingRaCount || 0),
     trainingAssessments: Number(raw.trainingAssessments || 0),
+    latestStruggles: Array.isArray(raw.latestStruggles) ? raw.latestStruggles.filter(Boolean) : [],
+    unassessedItems: Array.isArray(raw.unassessedItems) ? raw.unassessedItems.filter(Boolean) : [],
     day1: Boolean(raw.day1),
     day2: Boolean(raw.day2),
     needsWork: raw.needsWork || "",
@@ -474,7 +476,7 @@ async function applyMyRaFromCadetTabs(spreadsheetId, sheets = [], options = {}) 
     .map((cadet) => ({ cadet, range: sheetRange(cadet.callsign, "A1:Z260") }));
   if (!targets.length) return;
   const ranges = targets.map((target) => `ranges=${encodeURIComponent(target.range)}`).join("&");
-  const fields = encodeURIComponent("sheets(properties(title),data(rowData(values(formattedValue,effectiveFormat(backgroundColor,backgroundColorStyle(rgbColor))))))");
+  const fields = encodeURIComponent("sheets(properties(title),data(rowData(values(formattedValue,effectiveValue,effectiveFormat(backgroundColor,backgroundColorStyle(rgbColor))))))");
   const data = await fetchSheetJson(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}?includeGridData=true&${ranges}&fields=${fields}`, options);
   const byTitle = new Map((data.sheets || []).map((sheet) => [sheet.properties?.title, sheet]));
   targets.forEach(({ cadet }) => {
@@ -487,6 +489,8 @@ async function applyMyRaFromCadetTabs(spreadsheetId, sheets = [], options = {}) 
     cadet.trainingTrend = score.trend;
     cadet.trainingRaCount = score.raCount;
     cadet.trainingAssessments = score.count;
+    cadet.latestStruggles = score.latestStruggles;
+    cadet.unassessedItems = score.unassessedItems;
     cadet.sheetNotes = cadetSheetNotes(sheet);
   });
   saveState();
@@ -570,8 +574,17 @@ function cadetSheetNotes(sheet = {}) {
   startIndex = startIndex >= 0 ? startIndex + 1 : Math.max(0, noteRows.length - 35);
   return noteRows
     .slice(startIndex)
-    .filter((text) => text && !normalizeKey(text).includes("commentssummary"))
+    .filter((text) => text && !normalizeKey(text).includes("commentssummary") && !isAdminSheetNote(text))
     .slice(0, 24);
+}
+
+function isAdminSheetNote(text = "") {
+  const key = normalizeKey(text);
+  return key.includes("sopphrasesent")
+    || key.includes("day1training")
+    || key.includes("day1trained")
+    || key.includes("day2training")
+    || key.includes("day2trained");
 }
 
 function assessmentScoreFromCell(cell = {}, rowIndex = 0, columnIndex = 0) {
@@ -587,6 +600,38 @@ function assessmentScoreFromCell(cell = {}, rowIndex = 0, columnIndex = 0) {
   return null;
 }
 
+function cellChecked(cell = {}) {
+  if (cell.effectiveValue?.boolValue === true) return true;
+  return boolValue(cellText(cell));
+}
+
+function trainingRowLabel(cells = []) {
+  const labels = cells
+    .slice(0, 6)
+    .map(cellText)
+    .map((text) => text.replace(/\s+/g, " ").trim())
+    .filter(Boolean)
+    .filter((text) => {
+      const key = normalizeKey(text);
+      return key
+        && key !== "dontcolorthis"
+        && key !== "color"
+        && key !== "whatitmeans"
+        && key !== "general"
+        && !["1", "2", "3", "blank"].includes(key);
+    });
+  const label = labels[labels.length - 1] || "";
+  const key = normalizeKey(label);
+  if (!label || key.includes("training") || key.includes("treatmentsprocedures") || key.includes("pdscenes") || key.includes("emtactions") || key.includes("objectmenu")) {
+    return "";
+  }
+  return label;
+}
+
+function isRequiredTrainingRow(cells = []) {
+  return cells.slice(0, 6).some(cellChecked);
+}
+
 function averageScore(scores = []) {
   if (!scores.length) return null;
   return Number((scores.reduce((sum, score) => sum + score, 0) / scores.length).toFixed(2));
@@ -596,16 +641,26 @@ function cadetTrainingScore(sheet = {}) {
   let total = 0;
   let count = 0;
   const columnScores = new Map();
+  const rowDetails = [];
   const rows = sheet.data?.[0]?.rowData || [];
   rows.forEach((row, rowIndex) => {
+    const cells = row.values || [];
+    const label = trainingRowLabel(cells);
+    let latestScore = null;
+    let latestColumn = null;
+    let hasAnyScore = false;
     (row.values || []).forEach((cell, columnIndex) => {
       const score = assessmentScoreFromCell(cell, rowIndex, columnIndex);
       if (score !== null) {
         total += score;
         count += 1;
         columnScores.set(columnIndex, [...(columnScores.get(columnIndex) || []), score]);
+        hasAnyScore = true;
+        latestScore = score;
+        latestColumn = columnIndex;
       }
     });
+    if (label) rowDetails.push({ label, required: isRequiredTrainingRow(cells), hasAnyScore, latestScore, latestColumn });
   });
   const raAverages = [...columnScores.entries()]
     .sort(([columnA], [columnB]) => columnA - columnB)
@@ -613,15 +668,24 @@ function cadetTrainingScore(sheet = {}) {
     .filter((entry) => entry.count);
   const first = raAverages[0]?.average ?? null;
   const latest = raAverages[raAverages.length - 1]?.average ?? null;
+  const latestColumn = raAverages[raAverages.length - 1]?.columnIndex ?? null;
   const change = first !== null && latest !== null ? Number((first - latest).toFixed(2)) : 0;
   const trend = raAverages.length < 2 ? "single" : change >= 0.25 ? "improving" : change <= -0.25 ? "slipping" : "steady";
+  const latestStruggles = rowDetails
+    .filter((row) => row.latestColumn === latestColumn && row.latestScore >= 2)
+    .map((row) => `${row.label} (${row.latestScore === 3 ? "red" : "orange"})`);
+  const unassessedItems = rowDetails
+    .filter((row) => row.required && !row.hasAnyScore)
+    .map((row) => row.label);
   return {
     average: latest,
     overallAverage: count ? Number((total / count).toFixed(2)) : null,
     count,
     raCount: raAverages.length,
     firstAverage: first,
-    trend
+    trend,
+    latestStruggles: [...new Set(latestStruggles)],
+    unassessedItems: [...new Set(unassessedItems)]
   };
 }
 
@@ -1037,16 +1101,35 @@ function setDialogReadonly(readonly) {
   if (els.dialogSave) els.dialogSave.classList.toggle("is-hidden", readonly);
 }
 
+function sheetList(items = [], emptyText = "Nothing listed yet.") {
+  return items.length
+    ? `<ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
+    : `<p class="muted">${escapeHtml(emptyText)}</p>`;
+}
+
 function openCadetSheetNotes(cadet) {
   if (!cadet) return;
   setDialogReadonly(true);
   const notes = Array.isArray(cadet.sheetNotes) ? cadet.sheetNotes : [];
-  els.dialogTitle.textContent = `${cadet.name || "Cadet"} - Sheet Notes`;
-  els.dialogBody.innerHTML = notes.length ? `
-    <div class="sheet-note-list">
-      ${notes.map((note) => `<p>${escapeHtml(note)}</p>`).join("")}
+  const struggles = Array.isArray(cadet.latestStruggles) ? cadet.latestStruggles : [];
+  const unassessed = Array.isArray(cadet.unassessedItems) ? cadet.unassessedItems : [];
+  els.dialogTitle.textContent = `${cadet.name || "Cadet"} - RA Focus`;
+  els.dialogBody.innerHTML = `
+    <div class="cadet-focus">
+      <section>
+        <h3>Most Recent RA Struggles</h3>
+        ${sheetList(struggles, "No red or orange items found on their most recent RA.")}
+      </section>
+      <section>
+        <h3>Still Needs To Do</h3>
+        ${sheetList(unassessed, "All required checked items have at least one assessment.")}
+      </section>
+      <section>
+        <h3>Bottom Sheet Notes</h3>
+        ${notes.length ? `<div class="sheet-note-list">${notes.map((note) => `<p>${escapeHtml(note)}</p>`).join("")}</div>` : `<p class="muted">No personal sheet notes synced yet. Click Sync Sheet after signing in, or check that ${escapeHtml(cadet.callsign || "this cadet")} has notes at the bottom of their sheet.</p>`}
+      </section>
     </div>
-  ` : `<div class="empty">No personal sheet notes synced yet. Click Sync Sheet after signing in, or check that ${escapeHtml(cadet.callsign || "this cadet")} has notes at the bottom of their sheet.</div>`;
+  `;
   els.dialog.dataset.mode = "sheet-notes";
   els.dialog.dataset.id = cadet.id;
   els.dialog.showModal();
