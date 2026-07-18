@@ -207,6 +207,7 @@ function normalizeCadet(raw = {}) {
     lastRaDate: parseDate(raw.lastRaDate || raw.lastRA || raw.raDate),
     raCompleted: Boolean(raw.raCompleted),
     myRaCompleted: Boolean(raw.myRaCompleted),
+    myRaVerified: Boolean(raw.myRaVerified),
     trainingAverage: Number.isNaN(trainingAverage) ? null : trainingAverage,
     trainingOverallAverage: Number.isNaN(trainingOverallAverage) ? null : trainingOverallAverage,
     trainingTrend: raw.trainingTrend || "none",
@@ -484,10 +485,18 @@ function sheetRange(title, range = "A1:Z220") {
 async function applyMyRaFromCadetTabs(spreadsheetId, sheets = [], options = {}) {
   const myCallsign = normalizeCallsign(state.settings?.myCallsign);
   const titles = new Set(sheets.map((entry) => entry.properties?.title).filter(Boolean));
+  state.cadets.forEach((cadet) => {
+    cadet.myRaCompleted = false;
+    cadet.myRaVerified = false;
+  });
   const targets = state.cadets
     .filter((cadet) => cadet.callsign && titles.has(cadet.callsign))
     .map((cadet) => ({ cadet, range: sheetRange(cadet.callsign, "A1:Z260") }));
-  if (!targets.length) return;
+  if (!targets.length) {
+    saveState();
+    render();
+    return;
+  }
   const ranges = targets.map((target) => `ranges=${encodeURIComponent(target.range)}`).join("&");
   const fields = encodeURIComponent("sheets(properties(title),data(rowData(values(formattedValue,effectiveValue,effectiveFormat(backgroundColor,backgroundColorStyle(rgbColor))))))");
   const data = await fetchSheetJson(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}?includeGridData=true&${ranges}&fields=${fields}`, options);
@@ -495,7 +504,8 @@ async function applyMyRaFromCadetTabs(spreadsheetId, sheets = [], options = {}) 
   targets.forEach(({ cadet }) => {
     const sheet = byTitle.get(cadet.callsign);
     const cells = sheet?.data?.[0]?.rowData || [];
-    if (myCallsign) cadet.myRaCompleted = cadetHasRaCallsign(cells, myCallsign);
+    cadet.myRaVerified = true;
+    cadet.myRaCompleted = myCallsign ? cadetHasRaCallsign(cells, myCallsign) : false;
     const score = cadetTrainingScore(sheet);
     cadet.trainingAverage = score.average;
     cadet.trainingOverallAverage = score.overallAverage;
@@ -774,10 +784,6 @@ async function importPrivateGoogleSheet(options = {}) {
   const range = encodeURIComponent(`'${title.replace(/'/g, "''")}'`);
   const values = await fetchSheetJson(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(id)}/values/${range}?majorDimension=ROWS`, options);
   const count = importRows(rowsFromValues(values.values || []));
-  state.cadets.forEach((cadet) => {
-    cadet.myRaCompleted = false;
-  });
-  saveState();
   await applyMyRaFromCadetTabs(id, metadata.sheets || [], options);
   return count;
 }
@@ -840,7 +846,7 @@ function filteredCadets() {
 }
 
 function needsRa(cadet) {
-  return String(cadet.status).toLowerCase().includes("active") && !cadet.myRaCompleted;
+  return String(cadet.status).toLowerCase().includes("active") && !(cadet.myRaVerified && cadet.myRaCompleted);
 }
 
 function limitRisk(cadet) {
@@ -1347,6 +1353,7 @@ document.addEventListener("click", async (event) => {
     const cadet = state.cadets.find((entry) => entry.id === raDone.dataset.raDone);
     if (cadet) {
       cadet.myRaCompleted = true;
+      cadet.myRaVerified = false;
       cadet.raCompleted = true;
       cadet.lastRaDate = new Date().toISOString().slice(0, 10);
       saveState();
