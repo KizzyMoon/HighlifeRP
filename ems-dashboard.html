@@ -37,18 +37,6 @@
         <button data-action="google-sign-in" type="button">Google Sign In</button>
       </section>
 
-      <section class="source-panel">
-        <label>
-          Cadet Sheet
-          <input data-google-url value="https://docs.google.com/spreadsheets/d/1g3XXntoqyA9XMgEcXwq89RyqBUymJCpVbG1vlE4BSPY/edit?gid=1321749468#gid=1321749468" />
-        </label>
-        <label>
-          EMS Roster Sheet
-          <input data-roster-url value="https://docs.google.com/spreadsheets/d/1b9RV4HZh2Klex6jEq8YarlpzpDMt0F4ohV_GscHbSb8/edit?gid=647224122#gid=647224122" />
-        </label>
-        <span data-last-updated>No imports yet</span>
-      </section>
-
       <section class="stats" data-stats></section>
 
       <section class="view" data-view="overview">
@@ -239,8 +227,17 @@
               Google Gmail
               <input data-google-email type="email" placeholder="yourgmail@gmail.com" />
             </label>
+            <label class="full">
+              Cadet Sheet
+              <input data-google-url value="https://docs.google.com/spreadsheets/d/1g3XXntoqyA9XMgEcXwq89RyqBUymJCpVbG1vlE4BSPY/edit?gid=1321749468#gid=1321749468" />
+            </label>
+            <label class="full">
+              EMS Roster Sheet
+              <input data-roster-url value="https://docs.google.com/spreadsheets/d/1b9RV4HZh2Klex6jEq8YarlpzpDMt0F4ohV_GscHbSb8/edit?gid=647224122#gid=647224122" />
+            </label>
             <button data-action="save-settings" type="button">Save Settings</button>
             <p data-settings-summary class="muted">Used to check each cadet sheet for RAs you completed.</p>
+            <p data-last-updated class="muted">No imports yet</p>
           </div>
         </article>
       </section>
@@ -259,6 +256,6 @@
     </dialog>
 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="ems-dashboard.js?v=20260718-13"></script>
+    <script src="ems-dashboard.js?v=20260718-14"></script>
   </body>
 </html>

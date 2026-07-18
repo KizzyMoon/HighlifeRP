@@ -42,7 +42,6 @@ let googleAccessToken = "";
 const els = {
   lastUpdated: document.querySelector("[data-last-updated]"),
   toolbar: document.querySelector(".toolbar"),
-  sourcePanel: document.querySelector(".source-panel"),
   stats: document.querySelector("[data-stats]"),
   googleUrl: document.querySelector("[data-google-url]"),
   rosterUrl: document.querySelector("[data-roster-url]"),
@@ -1091,7 +1090,6 @@ function setActiveTab(tabName) {
   els.views.forEach((view) => view.classList.toggle("is-hidden", view.dataset.view !== activeTab));
   const isCheatSheet = activeTab === "cheat-sheet";
   els.toolbar.classList.toggle("is-hidden", isCheatSheet);
-  els.sourcePanel.classList.toggle("is-hidden", isCheatSheet);
   els.stats.classList.toggle("is-hidden", isCheatSheet);
 }
 
