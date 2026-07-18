@@ -549,7 +549,7 @@ label {
 
 .vehicle-card {
   display: grid;
-  grid-template-rows: auto minmax(136px, auto) auto 1fr;
+  grid-template-rows: auto minmax(136px, auto) auto;
   min-height: 230px;
 }
 
@@ -559,6 +559,14 @@ label {
 
 .fr-card {
   border-color: rgba(143, 182, 255, 0.34);
+}
+
+.seu-card .cheat-title h2 {
+  color: var(--green);
+}
+
+.fr-card .cheat-title h2 {
+  color: #8fb6ff;
 }
 
 .cheat-panel.meds-card {
@@ -668,11 +676,6 @@ label {
   font-weight: 900;
   margin-bottom: 10px;
   padding: 8px 14px;
-}
-
-.cheat-title .ratio-pill {
-  margin-bottom: 0;
-  padding: 7px 12px;
 }
 
 .ratio-pill.green {
