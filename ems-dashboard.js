@@ -967,8 +967,6 @@ function cadetCard(cadet, options = {}) {
         ${limitPill("14 day", cadet.day14Due, 3)}
         ${limitPill("28 day", cadet.day28Due, 7)}
       </div>
-      <p><strong>Work on:</strong> ${escapeHtml(cadet.needsWork || "Nothing logged yet.")}</p>
-      <p class="muted"><strong>My notes:</strong> ${escapeHtml(cadet.notes || "No local notes yet.")}</p>
       <div class="card-actions">
         <button data-edit-cadet="${cadet.id}" type="button">Edit</button>
         <button data-note-cadet="${cadet.id}" type="button">Add note</button>
@@ -1000,8 +998,6 @@ function overviewCadetCard(cadet, options = {}) {
         ${limitPill("14 day", cadet.day14Due, 3)}
         ${limitPill("28 day", cadet.day28Due, 7)}
       </div>
-      <p><strong>Work on:</strong> ${escapeHtml(cadet.needsWork || "Nothing logged yet.")}</p>
-      <p class="muted"><strong>My notes:</strong> ${escapeHtml(cadet.notes || "No local notes yet.")}</p>
     </article>
   `;
 }
