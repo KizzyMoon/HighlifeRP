@@ -5,6 +5,7 @@ const DEFAULT_ROSTER_URL = "https://docs.google.com/spreadsheets/d/1b9RV4HZh2Kle
 const DEFAULT_MY_CALLSIGN = "M3-18";
 const GOOGLE_CLIENT_ID = "210656397822-druudgp358pepcj342slktvmfj5f9ok2.apps.googleusercontent.com";
 const SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets.readonly";
+const RA_VERIFICATION_VERSION = "callsign-row-v2";
 const RANK_ORDER = [
   "Chief",
   "Deputy Chief",
@@ -207,7 +208,8 @@ function normalizeCadet(raw = {}) {
     lastRaDate: parseDate(raw.lastRaDate || raw.lastRA || raw.raDate),
     raCompleted: Boolean(raw.raCompleted),
     myRaCompleted: Boolean(raw.myRaCompleted),
-    myRaVerified: Boolean(raw.myRaVerified),
+    myRaVerified: Boolean(raw.myRaVerified) && raw.myRaVerificationVersion === RA_VERIFICATION_VERSION,
+    myRaVerificationVersion: raw.myRaVerificationVersion || "",
     trainingAverage: Number.isNaN(trainingAverage) ? null : trainingAverage,
     trainingOverallAverage: Number.isNaN(trainingOverallAverage) ? null : trainingOverallAverage,
     trainingTrend: raw.trainingTrend || "none",
@@ -488,6 +490,7 @@ async function applyMyRaFromCadetTabs(spreadsheetId, sheets = [], options = {}) 
   state.cadets.forEach((cadet) => {
     cadet.myRaCompleted = false;
     cadet.myRaVerified = false;
+    cadet.myRaVerificationVersion = "";
   });
   const targets = state.cadets
     .filter((cadet) => cadet.callsign && titles.has(cadet.callsign))
@@ -505,6 +508,7 @@ async function applyMyRaFromCadetTabs(spreadsheetId, sheets = [], options = {}) 
     const sheet = byTitle.get(cadet.callsign);
     const cells = sheet?.data?.[0]?.rowData || [];
     cadet.myRaVerified = true;
+    cadet.myRaVerificationVersion = RA_VERIFICATION_VERSION;
     cadet.myRaCompleted = myCallsign ? cadetHasRaCallsign(cells, myCallsign) : false;
     const score = cadetTrainingScore(sheet);
     cadet.trainingAverage = score.average;
@@ -846,7 +850,8 @@ function filteredCadets() {
 }
 
 function needsRa(cadet) {
-  return String(cadet.status).toLowerCase().includes("active") && !(cadet.myRaVerified && cadet.myRaCompleted);
+  const hasVerifiedRa = cadet.myRaVerified && cadet.myRaVerificationVersion === RA_VERIFICATION_VERSION && cadet.myRaCompleted;
+  return String(cadet.status).toLowerCase().includes("active") && !hasVerifiedRa;
 }
 
 function limitRisk(cadet) {
@@ -1354,6 +1359,7 @@ document.addEventListener("click", async (event) => {
     if (cadet) {
       cadet.myRaCompleted = true;
       cadet.myRaVerified = false;
+      cadet.myRaVerificationVersion = "";
       cadet.raCompleted = true;
       cadet.lastRaDate = new Date().toISOString().slice(0, 10);
       saveState();
