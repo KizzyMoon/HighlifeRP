@@ -214,6 +214,7 @@ function normalizeCadet(raw = {}) {
     trainingOverallAverage: Number.isNaN(trainingOverallAverage) ? null : trainingOverallAverage,
     trainingTrend: raw.trainingTrend || "none",
     trainingRaCount: Number(raw.trainingRaCount || 0),
+    uniqueFtoRaCount: Number(raw.uniqueFtoRaCount || 0),
     trainingAssessments: Number(raw.trainingAssessments || 0),
     latestStruggles: normalizeFocusGroups(raw.latestStruggles),
     unassessedItems: normalizeFocusGroups(raw.unassessedItems),
@@ -519,6 +520,7 @@ async function applyMyRaFromCadetTabs(spreadsheetId, sheets = [], options = {}) 
     cadet.myRaVerified = true;
     cadet.myRaVerificationVersion = RA_VERIFICATION_VERSION;
     cadet.myRaCompleted = myCallsign ? cadetHasRaCallsign(cells, myCallsign) : false;
+    cadet.uniqueFtoRaCount = uniqueFtoRaCount(cells);
     const score = cadetTrainingScore(sheet);
     cadet.trainingAverage = score.average;
     cadet.trainingOverallAverage = score.overallAverage;
@@ -599,6 +601,29 @@ function cadetHasRaCallsign(rows = [], myCallsign = "") {
   return values
     .slice(Math.max(labelIndex + 1, 0))
     .some((cell) => normalizeCallsign(cellText(cell)) === target);
+}
+
+function uniqueFtoRaCount(rows = []) {
+  const rowIndex = rows.findIndex((row, index) => {
+    const values = row.values || [];
+    const hasCallsignHeader = values.some((cell) => normalizeKey(cellText(cell)) === "callsignhere");
+    if (!hasCallsignHeader) return false;
+    const previousRow = rows[index - 1]?.values || [];
+    const nextRow = rows[index + 1]?.values || [];
+    const hasEmployeeHeader = previousRow.some((cell) => normalizeKey(cellText(cell)) === "ehere");
+    const hasDateHeader = nextRow.some((cell) => normalizeKey(cellText(cell)) === "dategoeshere");
+    return hasEmployeeHeader && hasDateHeader;
+  });
+  if (rowIndex < 0) return 0;
+  const values = rows[rowIndex]?.values || [];
+  const labelIndex = values.findIndex((cell) => normalizeKey(cellText(cell)) === "callsignhere");
+  const uniqueCallsigns = new Set(
+    values
+      .slice(Math.max(labelIndex + 1, 0))
+      .map((cell) => normalizeCallsign(cellText(cell)))
+      .filter(Boolean)
+  );
+  return uniqueCallsigns.size;
 }
 
 function cadetSheetNotes(sheet = {}) {
@@ -974,6 +999,13 @@ function raOfferButton(cadet) {
   return `<button class="ra-offer-button" data-ra-offered="${cadet.id}" type="button">RA Offered</button>`;
 }
 
+function uniqueFtoRaBadge(cadet) {
+  const count = Number(cadet.uniqueFtoRaCount || 0);
+  const label = count === 1 ? "1 unique FTO RA" : `${count} unique FTO RAs`;
+  const stateName = count >= 4 ? "good" : "zone";
+  return `<span class="unique-ra-badge pill ${stateName}">${escapeHtml(label)}</span>`;
+}
+
 function cadetCard(cadet, options = {}) {
   const dayPills = [
     cadet.day1 ? options.onlyMissingTraining ? "" : pill("Day 1", "good") : pill("No Day 1", "warn"),
@@ -982,7 +1014,10 @@ function cadetCard(cadet, options = {}) {
   const raPill = options.hideRaPill ? "" : raStatusPill(cadet);
   return `
     <article class="card training-${trainingLevel(cadet)}" data-view-sheet-notes="${cadet.id}" tabindex="0" role="button" aria-label="View sheet notes for ${escapeHtml(cadet.name || "cadet")}">
-      ${raOfferButton(cadet)}
+      <div class="card-top-line">
+        ${raOfferButton(cadet)}
+        ${uniqueFtoRaBadge(cadet)}
+      </div>
       <div class="card-head">
         <div>
           <h3>${escapeHtml(cadet.name || "Unnamed cadet")}</h3>
@@ -1017,7 +1052,10 @@ function overviewCadetCard(cadet, options = {}) {
   ].join("");
   return `
     <article class="card training-${trainingLevel(cadet)}" data-view-sheet-notes="${cadet.id}" tabindex="0" role="button" aria-label="View sheet notes for ${escapeHtml(cadet.name || "cadet")}">
-      ${raOfferButton(cadet)}
+      <div class="card-top-line">
+        ${raOfferButton(cadet)}
+        ${uniqueFtoRaBadge(cadet)}
+      </div>
       <div class="card-head">
         <div>
           <h3>${escapeHtml(cadet.name || "Unnamed cadet")}</h3>

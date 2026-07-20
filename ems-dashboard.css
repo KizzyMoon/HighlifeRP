@@ -286,6 +286,13 @@ label {
   gap: 8px;
 }
 
+.card-top-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .ra-offer-button {
   justify-self: start;
   min-height: 25px;
@@ -295,6 +302,11 @@ label {
   padding: 4px 9px;
   font-size: 0.76rem;
   font-weight: 900;
+}
+
+.unique-ra-badge {
+  min-height: 25px;
+  padding-inline: 8px;
 }
 
 .card h3,
