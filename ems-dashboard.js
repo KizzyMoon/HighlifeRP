@@ -1007,6 +1007,7 @@ function overviewCadetCard(cadet, options = {}) {
         <div>
           <h3>${escapeHtml(cadet.name || "Unnamed cadet")}</h3>
           <p class="muted">${escapeHtml([cadet.callsign || "No callsign", cadet.employeeNumber ? `#${cadet.employeeNumber}` : "", cadet.rank].filter(Boolean).join(" - "))}</p>
+          ${cadet.discordId ? `<p class="muted discord-line">${escapeHtml(cadet.discordId)}</p>` : ""}
         </div>
         <div class="status-pills">
           ${cadet.timezone ? pill(cadet.timezone, "zone") : ""}
