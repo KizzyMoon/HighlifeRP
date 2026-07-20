@@ -286,6 +286,17 @@ label {
   gap: 8px;
 }
 
+.ra-offer-button {
+  justify-self: start;
+  min-height: 25px;
+  border-color: rgba(248, 162, 162, 0.44);
+  background: rgba(248, 162, 162, 0.12);
+  color: #ffd0d0;
+  padding: 4px 9px;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
 .card h3,
 .card p {
   margin: 0;
@@ -876,6 +887,33 @@ textarea {
   padding: 10px 12px;
 }
 
+.ra-offer-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid rgba(248, 162, 162, 0.26);
+  border-radius: 8px;
+  background: rgba(248, 162, 162, 0.1);
+  padding: 9px 12px;
+}
+
+.ra-offer-total span {
+  color: #ffb7b7;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.ra-offer-total strong {
+  min-width: 34px;
+  border-radius: 999px;
+  background: rgba(248, 162, 162, 0.18);
+  color: #ffd0d0;
+  text-align: center;
+  padding: 4px 9px;
+}
+
 .cadet-focus h3 {
   margin: 0 0 7px;
   color: #ffb7b7;
@@ -929,6 +967,32 @@ textarea {
   border-color: rgba(255, 107, 107, 0.38);
   background: rgba(255, 107, 107, 0.13);
   color: #ff8f9a;
+}
+
+.ra-offer-history {
+  display: grid;
+  gap: 6px;
+}
+
+.ra-offer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid rgba(248, 162, 162, 0.14);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.025);
+  padding: 7px 9px;
+}
+
+.ra-offer-row button {
+  min-height: 23px;
+  border-color: rgba(248, 162, 162, 0.32);
+  background: rgba(248, 162, 162, 0.1);
+  color: #ffd0d0;
+  padding: 3px 7px;
+  font-size: 0.72rem;
+  font-weight: 900;
 }
 
 .full {

@@ -222,7 +222,15 @@ function normalizeCadet(raw = {}) {
     needsWork: raw.needsWork || "",
     sheetUrl: raw.sheetUrl || "",
     notes: raw.notes || "",
+    raOffers: Array.isArray(raw.raOffers) ? raw.raOffers.map(normalizeRaOffer).filter((offer) => offer.createdAt) : [],
     sheetNotes: Array.isArray(raw.sheetNotes) ? raw.sheetNotes.filter(Boolean) : []
+  };
+}
+
+function normalizeRaOffer(raw = {}) {
+  return {
+    id: raw.id || crypto.randomUUID(),
+    createdAt: raw.createdAt || ""
   };
 }
 
@@ -355,7 +363,7 @@ function replaceByName(existing, incoming, normalizer) {
   return incoming.map(normalizer).filter((entry) => entry.name || entry.callsign).map((item) => {
     const key = `${normalizeKey(item.name)}:${normalizeKey(item.callsign)}`;
     const match = previous.get(key);
-    return match ? { ...match, ...item, id: match.id, notes: match.notes || item.notes } : item;
+    return match ? { ...match, ...item, id: match.id, notes: match.notes || item.notes, raOffers: match.raOffers || item.raOffers } : item;
   }).sort((a, b) => String(a.name).localeCompare(String(b.name)));
 }
 
@@ -943,6 +951,14 @@ function trainingPill(cadet) {
   return pill(`${label}${raText}`, level);
 }
 
+function raOfferCount(cadet) {
+  return Array.isArray(cadet.raOffers) ? cadet.raOffers.length : 0;
+}
+
+function raOfferButton(cadet) {
+  return `<button class="ra-offer-button" data-ra-offered="${cadet.id}" type="button">RA Offered</button>`;
+}
+
 function cadetCard(cadet, options = {}) {
   const dayPills = [
     cadet.day1 ? options.onlyMissingTraining ? "" : pill("Day 1", "good") : pill("No Day 1", "warn"),
@@ -951,6 +967,7 @@ function cadetCard(cadet, options = {}) {
   const raPill = options.hideRaPill ? "" : needsRa(cadet) ? pill("Needs my RA", "bad") : pill("My RA done", "good");
   return `
     <article class="card training-${trainingLevel(cadet)}" data-view-sheet-notes="${cadet.id}" tabindex="0" role="button" aria-label="View sheet notes for ${escapeHtml(cadet.name || "cadet")}">
+      ${raOfferButton(cadet)}
       <div class="card-head">
         <div>
           <h3>${escapeHtml(cadet.name || "Unnamed cadet")}</h3>
@@ -985,6 +1002,7 @@ function overviewCadetCard(cadet, options = {}) {
   ].join("");
   return `
     <article class="card training-${trainingLevel(cadet)}" data-view-sheet-notes="${cadet.id}" tabindex="0" role="button" aria-label="View sheet notes for ${escapeHtml(cadet.name || "cadet")}">
+      ${raOfferButton(cadet)}
       <div class="card-head">
         <div>
           <h3>${escapeHtml(cadet.name || "Unnamed cadet")}</h3>
@@ -1202,6 +1220,31 @@ function focusItemClass(item = "") {
   return "";
 }
 
+function formatDateTime(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.valueOf()) ? value : date.toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+function raOfferHistory(cadet) {
+  const offers = [...(cadet.raOffers || [])].sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  return offers.length ? `
+    <div class="ra-offer-history">
+      ${offers.map((offer) => `
+        <div class="ra-offer-row">
+          <span>${escapeHtml(formatDateTime(offer.createdAt))}</span>
+          <button data-delete-ra-offer="${cadet.id}:${offer.id}" type="button">Delete</button>
+        </div>
+      `).join("")}
+    </div>
+  ` : `<p class="muted">No RA offers logged yet.</p>`;
+}
+
 function openCadetSheetNotes(cadet) {
   if (!cadet) return;
   setDialogReadonly(true);
@@ -1211,6 +1254,10 @@ function openCadetSheetNotes(cadet) {
   els.dialogTitle.textContent = `${cadet.name || "Cadet"} - RA Focus`;
   els.dialogBody.innerHTML = `
     <div class="cadet-focus">
+      <div class="ra-offer-total">
+        <span>RAs Offered</span>
+        <strong>${raOfferCount(cadet)}</strong>
+      </div>
       <section>
         <h3>Most Recent RA Struggles</h3>
         ${sheetList(struggles, "No red or orange items found on their most recent RA.")}
@@ -1223,23 +1270,29 @@ function openCadetSheetNotes(cadet) {
         <h3>Bottom Sheet Notes</h3>
         ${notes.length ? `<div class="sheet-note-list">${notes.map((note) => `<p>${escapeHtml(note)}</p>`).join("")}</div>` : `<p class="muted">No personal sheet notes synced yet. Click Sync Sheet after signing in, or check that ${escapeHtml(cadet.callsign || "this cadet")} has notes at the bottom of their sheet.</p>`}
       </section>
+      <section>
+        <h3>RA Offered Notes</h3>
+        ${raOfferHistory(cadet)}
+      </section>
     </div>
   `;
   els.dialog.dataset.mode = "sheet-notes";
   els.dialog.dataset.id = cadet.id;
-  els.dialog.showModal();
+  if (!els.dialog.open) els.dialog.showModal();
 }
 
 function saveDialog() {
   const data = Object.fromEntries(new FormData(els.dialogForm).entries());
   const id = els.dialog.dataset.id;
   if (els.dialog.dataset.mode === "cadet") {
+    const existingCadet = state.cadets.find((entry) => entry.id === id);
     const cadet = normalizeCadet({
       ...data,
       id: id || crypto.randomUUID(),
       raCompleted: Boolean(data.raCompleted),
       day1: Boolean(data.day1),
-      day2: Boolean(data.day2)
+      day2: Boolean(data.day2),
+      raOffers: existingCadet?.raOffers || []
     });
     state.cadets = id ? state.cadets.map((entry) => entry.id === id ? cadet : entry) : [...state.cadets, cadet];
   }
@@ -1333,6 +1386,28 @@ document.addEventListener("click", async (event) => {
   const tab = event.target.closest("[data-tab]");
   if (tab) {
     setActiveTab(tab.dataset.tab);
+  }
+
+  const raOffered = event.target.closest("[data-ra-offered]");
+  if (raOffered) {
+    const cadet = state.cadets.find((entry) => entry.id === raOffered.dataset.raOffered);
+    if (cadet) {
+      cadet.raOffers = [...(cadet.raOffers || []), normalizeRaOffer({ createdAt: new Date().toISOString() })];
+      saveState();
+      render();
+    }
+  }
+
+  const deleteRaOffer = event.target.closest("[data-delete-ra-offer]");
+  if (deleteRaOffer) {
+    const [cadetId, offerId] = deleteRaOffer.dataset.deleteRaOffer.split(":");
+    const cadet = state.cadets.find((entry) => entry.id === cadetId);
+    if (cadet) {
+      cadet.raOffers = (cadet.raOffers || []).filter((offer) => offer.id !== offerId);
+      saveState();
+      render();
+      openCadetSheetNotes(cadet);
+    }
   }
 
   const editCadet = event.target.closest("[data-edit-cadet]");
