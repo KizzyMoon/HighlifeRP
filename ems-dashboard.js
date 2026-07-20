@@ -140,6 +140,13 @@ function boolValue(value) {
   return ["yes", "y", "true", "done", "complete", "completed", "passed", "trained", "1"].includes(text);
 }
 
+function countValue(value) {
+  const text = String(value ?? "").trim();
+  if (!text || text === "-") return 0;
+  const number = Number(text.replace(/,/g, ""));
+  return Number.isNaN(number) ? 0 : number;
+}
+
 function parseDate(value) {
   const raw = String(value || "").trim();
   if (!raw) return "";
@@ -215,6 +222,7 @@ function normalizeCadet(raw = {}) {
     trainingTrend: raw.trainingTrend || "none",
     trainingRaCount: Number(raw.trainingRaCount || 0),
     uniqueFtoRaCount: Number(raw.uniqueFtoRaCount || 0),
+    uniqueFtoRaSource: raw.uniqueFtoRaSource || "",
     trainingAssessments: Number(raw.trainingAssessments || 0),
     latestStruggles: normalizeFocusGroups(raw.latestStruggles),
     unassessedItems: normalizeFocusGroups(raw.unassessedItems),
@@ -266,7 +274,8 @@ function cadetFromRow(row) {
   const name = pick(row, ["Name", "Cadet", "Cadet Name"]);
   const callsign = pick(row, ["Callsign", "Call Sign", "Unit", "Radio"]);
   const startDate = pick(row, ["Start Date", "Join Date", "Date Joined", "Cadet Start", "Hired"]);
-  const raText = pick(row, ["FTO RA's", "FTO RAs", "Unique FTO RA's", "Unique FTO RAs", "RA", "RA Complete", "RA Completed", "Ride Along", "Ridealong", "Ride Along Complete"]);
+  const uniqueFtoRaText = pick(row, ["Unique FTO RA's", "Unique FTO RAs", "Unique FTO RA", "Unique FTO"]);
+  const raText = pick(row, ["FTO RA's", "FTO RAs", "RA", "RA Complete", "RA Completed", "Ride Along", "Ridealong", "Ride Along Complete"]);
   const loa = pick(row, ["LOA", "Leave"]);
   return normalizeCadet({
     employeeNumber: pick(row, ["Employee Number", "Employee #", "Employee ID", "ID"]),
@@ -282,6 +291,8 @@ function cadetFromRow(row) {
     day28Due: pick(row, ["28 Day", "28 Day Due", "28-Day", "28 Day Limit", "28 day limit"]),
     lastRaDate: pick(row, ["Last RA", "RA Date", "Ride Along Date"]),
     raCompleted: boolValue(raText),
+    uniqueFtoRaCount: countValue(uniqueFtoRaText),
+    uniqueFtoRaSource: uniqueFtoRaText ? "roster" : "",
     day1: boolValue(pick(row, ["Day 1", "Day One", "D1", "Day 1 Trained"])),
     day2: boolValue(pick(row, ["Day 2", "Day Two", "D2", "Day 2 Trained"])),
     needsWork: pick(row, ["Needs Work", "Work On", "To Improve", "Training Notes", "Cadet Notes", "Notes"]),
@@ -520,7 +531,7 @@ async function applyMyRaFromCadetTabs(spreadsheetId, sheets = [], options = {}) 
     cadet.myRaVerified = true;
     cadet.myRaVerificationVersion = RA_VERIFICATION_VERSION;
     cadet.myRaCompleted = myCallsign ? cadetHasRaCallsign(cells, myCallsign) : false;
-    cadet.uniqueFtoRaCount = uniqueFtoRaCount(cells);
+    if (cadet.uniqueFtoRaSource !== "roster") cadet.uniqueFtoRaCount = uniqueFtoRaCount(cells);
     const score = cadetTrainingScore(sheet);
     cadet.trainingAverage = score.average;
     cadet.trainingOverallAverage = score.overallAverage;
