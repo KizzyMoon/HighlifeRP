@@ -867,7 +867,7 @@ function filteredCadets() {
 }
 
 function needsRa(cadet) {
-  return String(cadet.status).toLowerCase().includes("active") && !hasVerifiedRa(cadet);
+  return !hasVerifiedRa(cadet);
 }
 
 function hasVerifiedRa(cadet) {
