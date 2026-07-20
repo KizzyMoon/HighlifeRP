@@ -5,7 +5,7 @@ const DEFAULT_ROSTER_URL = "https://docs.google.com/spreadsheets/d/1b9RV4HZh2Kle
 const DEFAULT_MY_CALLSIGN = "M3-18";
 const GOOGLE_CLIENT_ID = "210656397822-druudgp358pepcj342slktvmfj5f9ok2.apps.googleusercontent.com";
 const SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets.readonly";
-const RA_VERIFICATION_VERSION = "callsign-row-v2";
+const RA_VERIFICATION_VERSION = "callsign-row-v3";
 const RANK_ORDER = [
   "Chief",
   "Deputy Chief",
@@ -582,12 +582,20 @@ function isGreenCell(cell = {}) {
 function cadetHasRaCallsign(rows = [], myCallsign = "") {
   const target = normalizeCallsign(myCallsign);
   if (!target) return false;
-  const callsignRow = rows.find((row) => (
-    (row.values || []).some((cell) => normalizeKey(cellText(cell)).includes("callsignhere"))
-  ));
-  if (!callsignRow) return false;
+  const rowIndex = rows.findIndex((row, index) => {
+    const values = row.values || [];
+    const hasCallsignHeader = values.some((cell) => normalizeKey(cellText(cell)) === "callsignhere");
+    if (!hasCallsignHeader) return false;
+    const previousRow = rows[index - 1]?.values || [];
+    const nextRow = rows[index + 1]?.values || [];
+    const hasEmployeeHeader = previousRow.some((cell) => normalizeKey(cellText(cell)) === "ehere");
+    const hasDateHeader = nextRow.some((cell) => normalizeKey(cellText(cell)) === "dategoeshere");
+    return hasEmployeeHeader && hasDateHeader;
+  });
+  if (rowIndex < 0) return false;
+  const callsignRow = rows[rowIndex];
   const values = callsignRow.values || [];
-  const labelIndex = values.findIndex((cell) => normalizeKey(cellText(cell)).includes("callsignhere"));
+  const labelIndex = values.findIndex((cell) => normalizeKey(cellText(cell)) === "callsignhere");
   return values
     .slice(Math.max(labelIndex + 1, 0))
     .some((cell) => normalizeCallsign(cellText(cell)) === target);
