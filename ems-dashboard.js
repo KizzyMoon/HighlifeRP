@@ -867,8 +867,15 @@ function filteredCadets() {
 }
 
 function needsRa(cadet) {
-  const hasVerifiedRa = cadet.myRaVerified && cadet.myRaVerificationVersion === RA_VERIFICATION_VERSION && cadet.myRaCompleted;
-  return String(cadet.status).toLowerCase().includes("active") && !hasVerifiedRa;
+  return String(cadet.status).toLowerCase().includes("active") && !hasVerifiedRa(cadet);
+}
+
+function hasVerifiedRa(cadet) {
+  return cadet.myRaVerified && cadet.myRaVerificationVersion === RA_VERIFICATION_VERSION && cadet.myRaCompleted;
+}
+
+function raStatusPill(cadet) {
+  return hasVerifiedRa(cadet) ? pill("My RA done", "good") : pill("Needs my RA", "bad");
 }
 
 function limitRisk(cadet) {
@@ -972,7 +979,7 @@ function cadetCard(cadet, options = {}) {
     cadet.day1 ? options.onlyMissingTraining ? "" : pill("Day 1", "good") : pill("No Day 1", "warn"),
     cadet.day2 ? options.onlyMissingTraining ? "" : pill("Day 2", "good") : pill("No Day 2", "warn")
   ].join("");
-  const raPill = options.hideRaPill ? "" : needsRa(cadet) ? pill("Needs my RA", "bad") : pill("My RA done", "good");
+  const raPill = options.hideRaPill ? "" : raStatusPill(cadet);
   return `
     <article class="card training-${trainingLevel(cadet)}" data-view-sheet-notes="${cadet.id}" tabindex="0" role="button" aria-label="View sheet notes for ${escapeHtml(cadet.name || "cadet")}">
       ${raOfferButton(cadet)}
@@ -1022,7 +1029,7 @@ function overviewCadetCard(cadet, options = {}) {
         </div>
       </div>
       <div class="pill-row">
-        ${options.showRaPill ? needsRa(cadet) ? pill("Needs my RA", "bad") : pill("My RA done", "good") : ""}
+        ${options.showRaPill ? raStatusPill(cadet) : ""}
         ${missingTraining}
         ${limitPill("14 day", cadet.day14Due, 3)}
         ${limitPill("28 day", cadet.day28Due, 7)}
