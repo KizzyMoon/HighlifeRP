@@ -197,6 +197,7 @@ function normalizeCadet(raw = {}) {
     employeeNumber: raw.employeeNumber || "",
     name: raw.name || "",
     callsign: raw.callsign || "",
+    discordId: raw.discordId || "",
     rank: raw.rank || "Cadet",
     timezone: raw.timezone || "",
     status: raw.status || "Active",
@@ -262,6 +263,7 @@ function cadetFromRow(row) {
     employeeNumber: pick(row, ["Employee Number", "Employee #", "Employee ID", "ID"]),
     name,
     callsign,
+    discordId: pick(row, ["Discord", "Discord ID", "Discord Name", "Discord Username"]),
     rank: pick(row, ["Rank", "Position"]) || "Cadet",
     timezone: pick(row, ["Timezone", "Time Zone", "TZ", "Zone"]),
     status: pick(row, ["Status", "Current Status"]) || (loa && loa !== "-" ? "LOA" : "Active"),
@@ -838,7 +840,7 @@ function filteredCadets() {
   const query = els.search.value.trim().toLowerCase();
   const filter = els.statusFilter.value;
   return state.cadets.filter((cadet) => {
-    const text = `${cadet.name} ${cadet.callsign} ${cadet.rank} ${cadet.timezone} ${cadet.status} ${cadet.needsWork} ${cadet.notes}`.toLowerCase();
+    const text = `${cadet.name} ${cadet.callsign} ${cadet.discordId} ${cadet.rank} ${cadet.timezone} ${cadet.status} ${cadet.needsWork} ${cadet.notes}`.toLowerCase();
     if (query && !text.includes(query)) return false;
     if (filter === "needs-ra" && !needsRa(cadet)) return false;
     if (filter === "limit-risk" && !limitRisk(cadet)) return false;
@@ -953,6 +955,7 @@ function cadetCard(cadet, options = {}) {
         <div>
           <h3>${escapeHtml(cadet.name || "Unnamed cadet")}</h3>
           <p class="muted">${escapeHtml([cadet.callsign || "No callsign", cadet.employeeNumber ? `#${cadet.employeeNumber}` : "", cadet.rank].filter(Boolean).join(" - "))}</p>
+          ${cadet.discordId ? `<p class="muted discord-line">${escapeHtml(cadet.discordId)}</p>` : ""}
         </div>
         <div class="status-pills">
           ${pill(cadet.status || "Active", String(cadet.status).toLowerCase().includes("active") ? "good" : "warn")}
