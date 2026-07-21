@@ -1091,12 +1091,10 @@ function renderStats() {
   const cadets = state.cadets;
   const overviewCadets = cadets.filter((cadet) => cadet.day1);
   const needsRaCount = overviewCadets.filter(needsRa).length;
-  const limitCount = overviewCadets.filter(limitRisk).length;
   const trainingCount = cadets.filter((cadet) => !cadet.day1 || !cadet.day2).length;
   els.stats.innerHTML = [
     ["Cadets", cadets.length],
     ["Need My RA", needsRaCount],
-    ["Limit Risk", limitCount],
     ["Need Training", trainingCount],
     ["EMS Listed", state.members.length]
   ].map(([label, value]) => `<article class="stat"><span>${label}</span><strong>${value}</strong></article>`).join("");
