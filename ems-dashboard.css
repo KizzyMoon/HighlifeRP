@@ -1031,10 +1031,38 @@ menu {
 }
 
 @media (max-width: 720px) {
+  .topbar {
+    gap: 8px;
+    padding: 8px 10px 0;
+  }
+
+  .brand {
+    padding: 2px 2px 0;
+  }
+
+  nav {
+    gap: 16px;
+    padding-bottom: 0;
+  }
+
+  nav button {
+    flex: 0 0 auto;
+    min-height: 34px;
+    padding: 6px 0 9px;
+  }
+
   .toolbar {
     align-items: stretch;
     flex-direction: column;
     padding: 10px 12px;
+  }
+
+  .toolbar input,
+  .toolbar select,
+  .toolbar button {
+    flex: none;
+    width: 100%;
+    min-height: 38px;
   }
 
   .view,
