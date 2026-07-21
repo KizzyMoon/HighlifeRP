@@ -197,8 +197,9 @@ function normalizeCadet(raw = {}) {
   const startDate = parseDate(raw.startDate || raw.start || raw.joined || raw.joinDate);
   const day14Due = parseDate(raw.day14Due || raw.fourteenDayDue || raw["14day"]) || addDays(startDate, 14);
   const day28Due = parseDate(raw.day28Due || raw.twentyEightDayDue || raw["28day"]) || addDays(startDate, 28);
-  const trainingAverage = raw.trainingAverage === null || raw.trainingAverage === undefined || raw.trainingAverage === "" ? null : Number(raw.trainingAverage);
+  const rawTrainingAverage = raw.trainingAverage === null || raw.trainingAverage === undefined || raw.trainingAverage === "" ? null : Number(raw.trainingAverage);
   const trainingOverallAverage = raw.trainingOverallAverage === null || raw.trainingOverallAverage === undefined || raw.trainingOverallAverage === "" ? null : Number(raw.trainingOverallAverage);
+  const trainingAverage = raw.trainingScoreType === "percent" || rawTrainingAverage > 3 ? rawTrainingAverage : null;
   return {
     id: raw.id || crypto.randomUUID(),
     employeeNumber: raw.employeeNumber || "",
@@ -219,6 +220,7 @@ function normalizeCadet(raw = {}) {
     myRaVerificationVersion: raw.myRaVerificationVersion || "",
     trainingAverage: Number.isNaN(trainingAverage) ? null : trainingAverage,
     trainingOverallAverage: Number.isNaN(trainingOverallAverage) ? null : trainingOverallAverage,
+    trainingScoreType: raw.trainingScoreType || "",
     trainingTrend: raw.trainingTrend || "none",
     trainingRaCount: Number(raw.trainingRaCount || 0),
     uniqueFtoRaCount: Number(raw.uniqueFtoRaCount || 0),
@@ -535,6 +537,7 @@ async function applyMyRaFromCadetTabs(spreadsheetId, sheets = [], options = {}) 
     const score = cadetTrainingScore(sheet);
     cadet.trainingAverage = score.average;
     cadet.trainingOverallAverage = score.overallAverage;
+    cadet.trainingScoreType = score.scoreType;
     cadet.trainingTrend = score.trend;
     cadet.trainingRaCount = score.raCount;
     cadet.trainingAssessments = score.count;
@@ -729,6 +732,18 @@ function averageScore(scores = []) {
   return Number((scores.reduce((sum, score) => sum + score, 0) / scores.length).toFixed(2));
 }
 
+function scorePercent(score) {
+  if (score === 1) return 100;
+  if (score === 2) return 55;
+  if (score === 3) return 20;
+  return 0;
+}
+
+function averagePercent(values = []) {
+  if (!values.length) return null;
+  return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
+}
+
 function groupFocusItems(rows = []) {
   const groups = new Map();
   rows.forEach(({ group, item }) => {
@@ -756,6 +771,7 @@ function cadetTrainingScore(sheet = {}) {
   let total = 0;
   let count = 0;
   const columnScores = new Map();
+  const columnPercents = new Map();
   const rowDetails = [];
   const rows = sheet.data?.[0]?.rowData || [];
   let currentSection = "General";
@@ -778,17 +794,37 @@ function cadetTrainingScore(sheet = {}) {
         latestColumn = columnIndex;
       }
     });
-    if (label) rowDetails.push({ label, group: currentSection, required: isRequiredTrainingRow(cells), hasAnyScore, latestScore, latestColumn });
+    const required = isRequiredTrainingRow(cells);
+    if (label) {
+      rowDetails.push({ label, group: currentSection, required, hasAnyScore, latestScore, latestColumn });
+    }
   });
+  rowDetails
+    .filter((row) => row.required || row.hasAnyScore)
+    .forEach((row) => {
+      if (row.latestColumn !== null) {
+        columnPercents.set(row.latestColumn, [...(columnPercents.get(row.latestColumn) || []), scorePercent(row.latestScore)]);
+      }
+    });
   const raAverages = [...columnScores.entries()]
     .sort(([columnA], [columnB]) => columnA - columnB)
     .map(([columnIndex, scores]) => ({ columnIndex, average: averageScore(scores), count: scores.length }))
     .filter((entry) => entry.count);
+  const latestPercentItems = rowDetails
+    .filter((row) => row.required || row.hasAnyScore)
+    .map((row) => scorePercent(row.latestScore));
+  const latestPercent = averagePercent(latestPercentItems);
+  const raPercents = [...columnPercents.entries()]
+    .sort(([columnA], [columnB]) => columnA - columnB)
+    .map(([columnIndex, percents]) => ({ columnIndex, percent: averagePercent(percents), count: percents.length }))
+    .filter((entry) => entry.count && entry.percent !== null);
   const first = raAverages[0]?.average ?? null;
   const latest = raAverages[raAverages.length - 1]?.average ?? null;
   const latestColumn = raAverages[raAverages.length - 1]?.columnIndex ?? null;
-  const change = first !== null && latest !== null ? Number((first - latest).toFixed(2)) : 0;
-  const trend = raAverages.length < 2 ? "single" : change >= 0.25 ? "improving" : change <= -0.25 ? "slipping" : "steady";
+  const firstPercent = raPercents[0]?.percent ?? null;
+  const lastPercent = raPercents[raPercents.length - 1]?.percent ?? null;
+  const change = firstPercent !== null && lastPercent !== null ? lastPercent - firstPercent : 0;
+  const trend = raPercents.length < 2 ? "single" : change >= 10 ? "improving" : change <= -10 ? "slipping" : "steady";
   const latestStruggles = rowDetails
     .filter((row) => row.latestColumn === latestColumn && row.latestScore >= 2)
     .map((row) => ({ group: row.group, item: `${row.label} (${row.latestScore === 3 ? "red" : "orange"})` }));
@@ -796,8 +832,9 @@ function cadetTrainingScore(sheet = {}) {
     .filter((row) => row.required && !row.hasAnyScore)
     .map((row) => ({ group: row.group, item: row.label }));
   return {
-    average: latest,
+    average: latestPercent,
     overallAverage: count ? Number((total / count).toFixed(2)) : null,
+    scoreType: "percent",
     count,
     raCount: raAverages.length,
     firstAverage: first,
@@ -984,22 +1021,21 @@ function limitPill(label, dueDate, dangerAt) {
 }
 
 function trainingLevel(cadet) {
-  const average = Number(cadet.trainingAverage);
-  if (!average || Number.isNaN(average)) return "none";
-  if (average < 1.5) return "good";
-  if (average < 2.5) return "warn";
+  const percent = Number(cadet.trainingAverage);
+  if (cadet.trainingAverage === null || cadet.trainingAverage === undefined || cadet.trainingAverage === "" || Number.isNaN(percent)) return "none";
+  if (percent >= 75) return "good";
+  if (percent >= 45) return "warn";
   return "bad";
 }
 
 function trainingPill(cadet) {
-  const average = Number(cadet.trainingAverage);
-  if (!average || Number.isNaN(average)) return pill("No avg", "zone");
+  const percent = Number(cadet.trainingAverage);
+  if (cadet.trainingAverage === null || cadet.trainingAverage === undefined || cadet.trainingAverage === "" || Number.isNaN(percent)) return pill("No score", "zone");
   const level = trainingLevel(cadet);
   const trend = cadet.trainingTrend || "none";
-  const base = level === "good" ? "Good" : level === "warn" ? "Needs time" : "Struggling";
+  const base = level === "good" ? "Good" : level === "warn" ? "Developing" : "Needs attention";
   const label = trend === "improving" ? "Improving" : trend === "slipping" ? "Needs attention" : base;
-  const raText = cadet.trainingRaCount > 1 ? ` latest ${average.toFixed(2)}` : ` avg ${average.toFixed(2)}`;
-  return pill(`${label}${raText}`, level);
+  return pill(`${label} ${Math.round(percent)}%`, level);
 }
 
 function raOfferCount(cadet) {
