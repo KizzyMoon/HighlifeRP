@@ -218,16 +218,36 @@ label {
 }
 
 .stat-icon svg {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   fill: none;
-  stroke: var(--accent);
+  stroke: none;
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 1.8;
 }
 
-.stat span {
+.stat-icon .icon-fill {
+  fill: var(--accent);
+}
+
+.stat-icon .icon-detail {
+  fill: none;
+  stroke: var(--accent-2);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.stat-icon .icon-cut {
+  fill: none;
+  stroke: #fff7f7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.stat-label {
   display: block;
   margin: 0;
   color: #ffd0d0;

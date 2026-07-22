@@ -1136,10 +1136,10 @@ function overviewCadetCard(cadet, options = {}) {
 
 function statIcon(label) {
   const icons = {
-    Cadets: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 19c0-2.2-1.8-4-4-4s-4 1.8-4 4"/><path d="M12 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M20 18c0-1.7-1.1-3.1-2.7-3.7"/><path d="M17 10.5a2.5 2.5 0 0 0-1.5-4.7"/><path d="M4 18c0-1.7 1.1-3.1 2.7-3.7"/><path d="M7 10.5a2.5 2.5 0 0 1 1.5-4.7"/></svg>`,
-    "Need My RA": `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 3h3v15H5V6h3l1-3Z"/><path d="M9 11h6"/><path d="M12 8v6"/><path d="M8 18h8"/></svg>`,
-    "Need Training": `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l9-5 9 5-9 5-9-5Z"/><path d="M7 11v5c1.3 1.2 3 2 5 2s3.7-.8 5-2v-5"/><path d="M21 8v6"/></svg>`,
-    "EMS Listed": `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.2 5 5.3-1.9-2.4 4.9 2.4 4.9-5.3-1.9-2.2 5-2.2-5-5.3 1.9 2.4-4.9-2.4-4.9L9.8 8 12 3Z"/><path d="M10 8h4v4h4v2h-4v4h-4v-4H6v-2h4V8Z"/></svg>`
+    Cadets: `<svg viewBox="0 0 24 24" aria-hidden="true"><path class="icon-fill" d="M12 11.5a3.4 3.4 0 1 0 0-6.8 3.4 3.4 0 0 0 0 6.8Z"/><path class="icon-fill" d="M5.3 20c.6-3.3 3.2-5.6 6.7-5.6s6.1 2.3 6.7 5.6H5.3Z"/><path class="icon-detail" d="M18.6 12.2c1.8.6 3 2 3.3 3.8"/><path class="icon-detail" d="M5.4 12.2c-1.8.6-3 2-3.3 3.8"/></svg>`,
+    "Need My RA": `<svg viewBox="0 0 24 24" aria-hidden="true"><path class="icon-fill" d="M7 4.8h3.1C10.5 3.7 11.2 3 12 3s1.5.7 1.9 1.8H17c1.1 0 2 .9 2 2V20H5V6.8c0-1.1.9-2 2-2Z"/><path class="icon-cut" d="M9.3 8h5.4"/><path class="icon-cut" d="M8.8 12h6.4"/><path class="icon-cut" d="M8.8 16h4.8"/></svg>`,
+    "Need Training": `<svg viewBox="0 0 24 24" aria-hidden="true"><path class="icon-fill" d="M7 7.5h2V6a3 3 0 0 1 6 0v1.5h2a2 2 0 0 1 2 2V20H5V9.5a2 2 0 0 1 2-2Z"/><path class="icon-cut" d="M11 7.5V6a1 1 0 0 1 2 0v1.5"/><path class="icon-cut" d="M12 11v5"/><path class="icon-cut" d="M9.5 13.5h5"/></svg>`,
+    Roster: `<svg viewBox="0 0 24 24" aria-hidden="true"><path class="icon-fill" d="M12 2.8l2 4.6 4.9-1.8-2.2 4.7 4.6 1.9-4.6 1.9 2.2 4.7-4.9-1.8-2 4.6-2-4.6-4.9 1.8 2.2-4.7-4.6-1.9 4.6-1.9-2.2-4.7L10 7.4l2-4.6Z"/><path class="icon-cut" d="M10.2 8.6h3.6v3h3v3.2h-3v3h-3.6v-3h-3v-3.2h3v-3Z"/></svg>`
   };
   return `<span class="stat-icon">${icons[label] || icons.Cadets}</span>`;
 }
@@ -1153,8 +1153,8 @@ function renderStats() {
     ["Cadets", cadets.length],
     ["Need My RA", needsRaCount],
     ["Need Training", trainingCount],
-    ["EMS Listed", state.members.length]
-  ].map(([label, value]) => `<article class="stat">${statIcon(label)}<span>${label}</span><strong>${value}</strong></article>`).join("");
+    ["Roster", state.members.length]
+  ].map(([label, value]) => `<article class="stat">${statIcon(label)}<span class="stat-label">${label}</span><strong>${value}</strong></article>`).join("");
   els.lastUpdated.textContent = state.lastUpdated ? `Last import ${new Date(state.lastUpdated).toLocaleString("en-GB")}` : "No imports yet";
 }
 
