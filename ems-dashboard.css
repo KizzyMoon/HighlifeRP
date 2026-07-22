@@ -1002,6 +1002,7 @@ textarea {
 .ra-offers-controls {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-end;
   gap: 8px;
 }
@@ -1016,21 +1017,23 @@ textarea {
 }
 
 .ra-offer-summary {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(110px, 1fr));
-  gap: 8px;
-  margin-bottom: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .ra-offer-summary span {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
+  gap: 6px;
   border: 1px solid rgba(248, 162, 162, 0.14);
   border-radius: 7px;
   background: rgba(255, 255, 255, 0.025);
   color: #ffd0d0;
-  padding: 8px 10px;
+  min-width: 74px;
+  padding: 7px 9px;
+  white-space: nowrap;
 }
 
 .ra-offer-summary strong {
@@ -1166,18 +1169,22 @@ menu {
     flex-direction: column;
   }
 
-  .ra-offers-controls,
-  .ra-offer-summary {
-    grid-template-columns: 1fr;
-  }
-
   .ra-offers-controls {
     width: 100%;
+    justify-content: stretch;
   }
 
   .ra-offers-controls select,
   .ra-offers-controls button {
     width: 100%;
+  }
+
+  .ra-offer-summary {
+    width: 100%;
+  }
+
+  .ra-offer-summary span {
+    flex: 1 1 calc(50% - 4px);
   }
 
   .cheat-hero > div:first-child {
