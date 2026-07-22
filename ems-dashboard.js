@@ -1230,9 +1230,10 @@ function setActiveTab(tabName) {
   localStorage.setItem(ACTIVE_TAB_KEY, activeTab);
   els.tabs.forEach((button) => button.classList.toggle("active", button.dataset.tab === activeTab));
   els.views.forEach((view) => view.classList.toggle("is-hidden", view.dataset.view !== activeTab));
-  const isCheatSheet = activeTab === "cheat-sheet";
-  els.toolbar.classList.toggle("is-hidden", isCheatSheet);
-  els.stats.classList.toggle("is-hidden", isCheatSheet);
+  const hidePageChrome = activeTab === "cheat-sheet";
+  const hideStats = ["cheat-sheet", "directory", "settings"].includes(activeTab);
+  els.toolbar.classList.toggle("is-hidden", hidePageChrome);
+  els.stats.classList.toggle("is-hidden", hideStats);
 }
 
 function field(name, label, value = "", type = "text", extra = "") {
