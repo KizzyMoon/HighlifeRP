@@ -59,6 +59,9 @@ const els = {
   limitCount: document.querySelector("[data-count-limits]"),
   directoryCount: document.querySelector("[data-directory-count]"),
   notesCount: document.querySelector("[data-notes-count]"),
+  raOfferMonth: document.querySelector("[data-ra-offer-month]"),
+  raOfferSummary: document.querySelector("[data-ra-offer-summary]"),
+  raOfferLog: document.querySelector("[data-ra-offer-log]"),
   dialog: document.querySelector("[data-dialog]"),
   dialogForm: document.querySelector("[data-dialog-form]"),
   dialogTitle: document.querySelector("[data-dialog-title]"),
@@ -76,11 +79,12 @@ function loadState() {
       cadets: Array.isArray(saved.cadets) ? saved.cadets.map(normalizeCadet) : [],
       members: Array.isArray(saved.members) ? saved.members.map(normalizeMember) : [],
       notes: Array.isArray(saved.notes) ? saved.notes.map(normalizeNote) : [],
+      pingOffers: Array.isArray(saved.pingOffers) ? saved.pingOffers.map(normalizePingOffer).filter((offer) => offer.createdAt) : [],
       settings: normalizeSettings(saved.settings),
       lastUpdated: saved.lastUpdated || ""
     };
   } catch {
-    return { cadets: [], members: [], notes: [], settings: normalizeSettings(), lastUpdated: "" };
+    return { cadets: [], members: [], notes: [], pingOffers: [], settings: normalizeSettings(), lastUpdated: "" };
   }
 }
 
@@ -239,6 +243,13 @@ function normalizeCadet(raw = {}) {
 }
 
 function normalizeRaOffer(raw = {}) {
+  return {
+    id: raw.id || crypto.randomUUID(),
+    createdAt: raw.createdAt || ""
+  };
+}
+
+function normalizePingOffer(raw = {}) {
   return {
     id: raw.id || crypto.randomUUID(),
     createdAt: raw.createdAt || ""
@@ -1150,6 +1161,7 @@ function renderOverview() {
 function renderCadets() {
   const cadets = filteredCadets();
   els.cadetGrid.innerHTML = cadets.length ? cadets.map(cadetCard).join("") : empty("No cadets found. Import a sheet or add one manually.");
+  renderRaOffers();
 }
 
 function renderDirectory() {
@@ -1330,6 +1342,84 @@ function formatDateTime(value) {
   });
 }
 
+function monthKey(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.valueOf()) ? "" : `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function monthLabel(key) {
+  const [year, month] = String(key || "").split("-").map(Number);
+  const date = new Date(year, month - 1, 1);
+  return Number.isNaN(date.valueOf()) ? "Unknown month" : date.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+}
+
+function raOfferEvents() {
+  const individual = state.cadets.flatMap((cadet) => (cadet.raOffers || []).map((offer) => ({
+    id: offer.id,
+    type: "Individual",
+    cadetId: cadet.id,
+    cadetName: cadet.name || "Unnamed cadet",
+    callsign: cadet.callsign || "",
+    discordId: cadet.discordId || "",
+    createdAt: offer.createdAt
+  })));
+  const pings = (state.pingOffers || []).map((offer) => ({
+    id: offer.id,
+    type: "Ping",
+    cadetId: "",
+    cadetName: "All cadets",
+    callsign: "",
+    discordId: "",
+    createdAt: offer.createdAt
+  }));
+  return [...individual, ...pings].filter((offer) => offer.createdAt);
+}
+
+function selectedRaOfferMonth() {
+  return els.raOfferMonth?.value || "all";
+}
+
+function renderRaOfferMonthOptions(events = raOfferEvents()) {
+  if (!els.raOfferMonth) return;
+  const current = selectedRaOfferMonth();
+  const months = [...new Set(events.map((event) => monthKey(event.createdAt)).filter(Boolean))]
+    .sort((a, b) => b.localeCompare(a));
+  const options = [
+    ["all", "All months"],
+    ...months.map((key) => [key, monthLabel(key)])
+  ];
+  els.raOfferMonth.innerHTML = options.map(([value, label]) => `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`).join("");
+  els.raOfferMonth.value = options.some(([value]) => value === current) ? current : "all";
+}
+
+function renderRaOffers() {
+  if (!els.raOfferSummary || !els.raOfferLog) return;
+  const events = raOfferEvents();
+  renderRaOfferMonthOptions(events);
+  const selectedMonth = selectedRaOfferMonth();
+  const filtered = events
+    .filter((event) => selectedMonth === "all" || monthKey(event.createdAt) === selectedMonth)
+    .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  const individualCount = filtered.filter((event) => event.type === "Individual").length;
+  const pingCount = filtered.filter((event) => event.type === "Ping").length;
+  const cadetCount = new Set(filtered.filter((event) => event.type === "Individual").map((event) => event.cadetId)).size;
+  els.raOfferSummary.innerHTML = `
+    <span><strong>${filtered.length}</strong> total</span>
+    <span><strong>${individualCount}</strong> individual</span>
+    <span><strong>${pingCount}</strong> pings</span>
+    <span><strong>${cadetCount}</strong> cadets</span>
+  `;
+  els.raOfferLog.innerHTML = filtered.length ? filtered.map((event) => `
+    <div class="ra-offer-log-row">
+      <span class="pill ${event.type === "Ping" ? "met" : "bad"}">${escapeHtml(event.type === "Ping" ? "Ping offer" : "RA offered")}</span>
+      <strong>${escapeHtml(event.cadetName)}</strong>
+      <span class="muted">${escapeHtml([event.callsign, event.discordId].filter(Boolean).join(" - "))}</span>
+      <time>${escapeHtml(formatDateTime(event.createdAt))}</time>
+      ${event.type === "Ping" ? `<button data-delete-ping-offer="${escapeHtml(event.id)}" type="button">Delete</button>` : ""}
+    </div>
+  `).join("") : empty("No RA offers logged for this month.");
+}
+
 function raOfferHistory(cadet) {
   const offers = [...(cadet.raOffers || [])].sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
   return offers.length ? `
@@ -1481,6 +1571,11 @@ document.addEventListener("click", async (event) => {
   if (action === "export-all") exportAll();
   if (action === "add-cadet") openCadetForm();
   if (action === "add-member") openMemberForm();
+  if (action === "ping-offer") {
+    state.pingOffers = [...(state.pingOffers || []), normalizePingOffer({ createdAt: new Date().toISOString() })];
+    saveState();
+    render();
+  }
 
   const tab = event.target.closest("[data-tab]");
   if (tab) {
@@ -1507,6 +1602,13 @@ document.addEventListener("click", async (event) => {
       render();
       openCadetSheetNotes(cadet);
     }
+  }
+
+  const deletePingOffer = event.target.closest("[data-delete-ping-offer]");
+  if (deletePingOffer) {
+    state.pingOffers = (state.pingOffers || []).filter((offer) => offer.id !== deletePingOffer.dataset.deletePingOffer);
+    saveState();
+    render();
   }
 
   const editCadet = event.target.closest("[data-edit-cadet]");
@@ -1557,6 +1659,7 @@ async function autoSyncGoogleSheets() {
 
 els.search.addEventListener("input", render);
 els.statusFilter.addEventListener("change", render);
+els.raOfferMonth?.addEventListener("change", renderRaOffers);
 
 els.dialogForm.addEventListener("submit", (event) => {
   if (event.submitter?.value === "save") saveDialog();

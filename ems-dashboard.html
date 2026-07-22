@@ -68,6 +68,20 @@
 
       <section class="view is-hidden" data-view="cadets">
         <div class="cadet-grid" data-cadet-grid></div>
+        <article class="panel ra-offers-panel">
+          <div class="panel-head ra-offers-head">
+            <div>
+              <h2>RA Offers</h2>
+              <p class="muted">Individual offers and Discord ping offers.</p>
+            </div>
+            <div class="ra-offers-controls">
+              <select data-ra-offer-month aria-label="Filter RA offers by month"></select>
+              <button data-action="ping-offer" type="button">Ping offer</button>
+            </div>
+          </div>
+          <div data-ra-offer-summary class="ra-offer-summary"></div>
+          <div data-ra-offer-log class="ra-offer-log"></div>
+        </article>
       </section>
 
       <section class="view is-hidden" data-view="directory">
@@ -258,6 +272,6 @@
     </dialog>
 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="ems-dashboard.js?v=20260721-1"></script>
+    <script src="ems-dashboard.js?v=20260722-1"></script>
   </body>
 </html>
