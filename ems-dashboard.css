@@ -197,15 +197,20 @@ label {
 }
 
 .stat {
-  position: relative;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-content: center;
+  align-items: center;
+  column-gap: 14px;
   min-height: 82px;
   overflow: hidden;
   padding: 14px 16px;
 }
 
 .stat-icon {
-  position: absolute;
-  inset: 14px auto auto 16px;
+  grid-column: 1;
+  grid-row: 1 / span 2;
   display: grid;
   place-items: center;
   width: 42px;
@@ -227,15 +232,16 @@ label {
 
 .stat span {
   display: block;
-  margin-left: 58px;
+  margin: 0;
   color: #ffd0d0;
   font-size: 0.78rem;
   font-weight: 800;
+  line-height: 1.1;
 }
 
 .stat strong {
   display: block;
-  margin: 4px 0 0 58px;
+  margin: 4px 0 0;
   color: #fff;
   font-size: 1.8rem;
   line-height: 1;
@@ -1206,6 +1212,8 @@ menu {
   }
 
   .stat {
+    grid-template-columns: 36px minmax(0, 1fr);
+    column-gap: 10px;
     min-height: 76px;
     padding: 12px;
   }
@@ -1218,11 +1226,6 @@ menu {
   .stat-icon svg {
     width: 18px;
     height: 18px;
-  }
-
-  .stat span,
-  .stat strong {
-    margin-left: 48px;
   }
 
   .cadet-grid {
