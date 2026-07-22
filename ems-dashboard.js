@@ -1134,6 +1134,16 @@ function overviewCadetCard(cadet, options = {}) {
   `;
 }
 
+function statIcon(label) {
+  const icons = {
+    Cadets: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 19c0-2.2-1.8-4-4-4s-4 1.8-4 4"/><path d="M12 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M20 18c0-1.7-1.1-3.1-2.7-3.7"/><path d="M17 10.5a2.5 2.5 0 0 0-1.5-4.7"/><path d="M4 18c0-1.7 1.1-3.1 2.7-3.7"/><path d="M7 10.5a2.5 2.5 0 0 1 1.5-4.7"/></svg>`,
+    "Need My RA": `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 3h3v15H5V6h3l1-3Z"/><path d="M9 11h6"/><path d="M12 8v6"/><path d="M8 18h8"/></svg>`,
+    "Need Training": `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l9-5 9 5-9 5-9-5Z"/><path d="M7 11v5c1.3 1.2 3 2 5 2s3.7-.8 5-2v-5"/><path d="M21 8v6"/></svg>`,
+    "EMS Listed": `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.2 5 5.3-1.9-2.4 4.9 2.4 4.9-5.3-1.9-2.2 5-2.2-5-5.3 1.9 2.4-4.9-2.4-4.9L9.8 8 12 3Z"/><path d="M10 8h4v4h4v2h-4v4h-4v-4H6v-2h4V8Z"/></svg>`
+  };
+  return `<span class="stat-icon">${icons[label] || icons.Cadets}</span>`;
+}
+
 function renderStats() {
   const cadets = state.cadets;
   const overviewCadets = cadets.filter((cadet) => cadet.day1);
@@ -1144,7 +1154,7 @@ function renderStats() {
     ["Need My RA", needsRaCount],
     ["Need Training", trainingCount],
     ["EMS Listed", state.members.length]
-  ].map(([label, value]) => `<article class="stat"><span>${label}</span><strong>${value}</strong></article>`).join("");
+  ].map(([label, value]) => `<article class="stat">${statIcon(label)}<span>${label}</span><strong>${value}</strong></article>`).join("");
   els.lastUpdated.textContent = state.lastUpdated ? `Last import ${new Date(state.lastUpdated).toLocaleString("en-GB")}` : "No imports yet";
 }
 

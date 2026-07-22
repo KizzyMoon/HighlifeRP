@@ -203,15 +203,26 @@ label {
   padding: 14px 16px;
 }
 
-.stat::before {
-  content: "";
+.stat-icon {
   position: absolute;
   inset: 14px auto auto 16px;
+  display: grid;
+  place-items: center;
   width: 42px;
   height: 42px;
   border: 1px solid rgba(248, 162, 162, 0.18);
   border-radius: 999px;
   background: radial-gradient(circle, rgba(248, 162, 162, 0.22), rgba(248, 162, 162, 0.05));
+}
+
+.stat-icon svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: var(--accent);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
 }
 
 .stat span {
@@ -1199,9 +1210,14 @@ menu {
     padding: 12px;
   }
 
-  .stat::before {
+  .stat-icon {
     width: 34px;
     height: 34px;
+  }
+
+  .stat-icon svg {
+    width: 18px;
+    height: 18px;
   }
 
   .stat span,
