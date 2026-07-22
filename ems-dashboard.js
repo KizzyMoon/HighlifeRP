@@ -1139,7 +1139,7 @@ function statIcon(label) {
     Cadets: `<svg viewBox="0 0 24 24" aria-hidden="true"><path class="icon-fill" d="M12 11.5a3.4 3.4 0 1 0 0-6.8 3.4 3.4 0 0 0 0 6.8Z"/><path class="icon-fill" d="M5.3 20c.6-3.3 3.2-5.6 6.7-5.6s6.1 2.3 6.7 5.6H5.3Z"/><path class="icon-detail" d="M18.6 12.2c1.8.6 3 2 3.3 3.8"/><path class="icon-detail" d="M5.4 12.2c-1.8.6-3 2-3.3 3.8"/></svg>`,
     "Need My RA": `<svg viewBox="0 0 24 24" aria-hidden="true"><path class="icon-fill" d="M7 4.8h3.1C10.5 3.7 11.2 3 12 3s1.5.7 1.9 1.8H17c1.1 0 2 .9 2 2V20H5V6.8c0-1.1.9-2 2-2Z"/><path class="icon-cut" d="M9.3 8h5.4"/><path class="icon-cut" d="M8.8 12h6.4"/><path class="icon-cut" d="M8.8 16h4.8"/></svg>`,
     "Need Training": `<svg viewBox="0 0 24 24" aria-hidden="true"><path class="icon-fill" d="M7 7.5h2V6a3 3 0 0 1 6 0v1.5h2a2 2 0 0 1 2 2V20H5V9.5a2 2 0 0 1 2-2Z"/><path class="icon-cut" d="M11 7.5V6a1 1 0 0 1 2 0v1.5"/><path class="icon-cut" d="M12 11v5"/><path class="icon-cut" d="M9.5 13.5h5"/></svg>`,
-    Roster: `<svg viewBox="0 0 24 24" aria-hidden="true"><path class="icon-fill" d="M12 2.8l2 4.6 4.9-1.8-2.2 4.7 4.6 1.9-4.6 1.9 2.2 4.7-4.9-1.8-2 4.6-2-4.6-4.9 1.8 2.2-4.7-4.6-1.9 4.6-1.9-2.2-4.7L10 7.4l2-4.6Z"/><path class="icon-cut" d="M10.2 8.6h3.6v3h3v3.2h-3v3h-3.6v-3h-3v-3.2h3v-3Z"/></svg>`
+    Roster: `<img class="stat-icon-img" src="ems-favicon.png?v=20260722-2" alt="" />`
   };
   return `<span class="stat-icon">${icons[label] || icons.Cadets}</span>`;
 }

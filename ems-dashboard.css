@@ -227,6 +227,12 @@ label {
   stroke-width: 1.8;
 }
 
+.stat-icon-img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
 .stat-icon .icon-fill {
   fill: var(--accent);
 }
