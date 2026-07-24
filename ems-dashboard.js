@@ -471,7 +471,7 @@ async function ensureGoogleAccessToken(options = {}) {
   if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === "PASTE_GOOGLE_CLIENT_ID_HERE") {
     throw new Error("Google sign-in needs a Google OAuth Client ID added to ems-dashboard.js first.");
   }
-  if (googleAccessToken) return googleAccessToken;
+  if (googleAccessToken && !options.force) return googleAccessToken;
   await waitForGoogleIdentity();
   return new Promise((resolve, reject) => {
     googleTokenClient = google.accounts.oauth2.initTokenClient({
@@ -498,7 +498,7 @@ async function fetchSheetJson(url, options = {}) {
   });
   if (response.status === 401 || response.status === 403) {
     googleAccessToken = "";
-    throw new Error("Your Google account does not have access to this sheet, or permission expired.");
+    throw new Error("Google could not open one of the sheets. Make sure you signed in with the same Gmail that can open the sheet, then try Google Sign In again.");
   }
   if (!response.ok) throw new Error(`Google Sheets returned ${response.status}.`);
   return response.json();
@@ -516,7 +516,7 @@ async function sendSheetJson(url, options = {}) {
   });
   if (response.status === 401 || response.status === 403) {
     googleAccessToken = "";
-    throw new Error("Your Google account does not have permission to save to the storage sheet.");
+    throw new Error("Google could not save to your Personal Storage Sheet. Make sure you own or can edit that sheet, then try Google Sign In again.");
   }
   if (!response.ok) throw new Error(`Google Sheets returned ${response.status}.`);
   return response.json();
@@ -1779,11 +1779,8 @@ document.addEventListener("click", async (event) => {
   const action = event.target.closest("[data-action]")?.dataset.action;
   if (action === "google-sign-in") {
     try {
-      try {
-        await ensureGoogleAccessToken({ prompt: "" });
-      } catch {
-        await ensureGoogleAccessToken({ prompt: "consent" });
-      }
+      googleAccessToken = "";
+      await ensureGoogleAccessToken({ prompt: "consent", force: true });
       await loadPersonalCloudData({ prompt: "" });
       render();
       alert("Google sign-in connected. Your personal dashboard data has been loaded.");
@@ -1795,7 +1792,12 @@ document.addEventListener("click", async (event) => {
   if (action === "save-settings") saveSettings();
   if (action === "load-cloud") {
     try {
-      await loadPersonalCloudData({ prompt: "" });
+      try {
+        await loadPersonalCloudData({ prompt: "" });
+      } catch {
+        googleAccessToken = "";
+        await loadPersonalCloudData({ prompt: "consent", force: true });
+      }
       render();
       alert("Loaded your personal dashboard data from Google Sheets.");
     } catch (error) {
@@ -1804,7 +1806,12 @@ document.addEventListener("click", async (event) => {
   }
   if (action === "save-cloud") {
     try {
-      await savePersonalCloudData({ prompt: "" });
+      try {
+        await savePersonalCloudData({ prompt: "" });
+      } catch {
+        googleAccessToken = "";
+        await savePersonalCloudData({ prompt: "consent", force: true });
+      }
       alert("Saved your personal dashboard data to Google Sheets.");
     } catch (error) {
       alert(error.message);
