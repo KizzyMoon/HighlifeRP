@@ -2,9 +2,10 @@ const STORAGE_KEY = "highlife-ems-dashboard-v1";
 const ACTIVE_TAB_KEY = "highlife-ems-active-tab";
 const DEFAULT_SHEET_URL = "https://docs.google.com/spreadsheets/d/1g3XXntoqyA9XMgEcXwq89RyqBUymJCpVbG1vlE4BSPY/edit?gid=1321749468#gid=1321749468";
 const DEFAULT_ROSTER_URL = "https://docs.google.com/spreadsheets/d/1b9RV4HZh2Klex6jEq8YarlpzpDMt0F4ohV_GscHbSb8/edit?gid=647224122#gid=647224122";
+const DEFAULT_STORAGE_URL = "https://docs.google.com/spreadsheets/d/15bIY2191kS-cbt8F-qeltWOb0qkK4Anpko2pZaagAm8/edit?usp=sharing";
 const DEFAULT_MY_CALLSIGN = "M3-18";
 const GOOGLE_CLIENT_ID = "210656397822-druudgp358pepcj342slktvmfj5f9ok2.apps.googleusercontent.com";
-const SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets.readonly";
+const SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets";
 const RA_VERIFICATION_VERSION = "callsign-row-v3";
 const RANK_ORDER = [
   "Chief",
@@ -38,6 +39,7 @@ const state = loadState();
 let activeTab = localStorage.getItem(ACTIVE_TAB_KEY) || "overview";
 let googleTokenClient = null;
 let googleAccessToken = "";
+let cloudSaveTimer = null;
 
 const els = {
   lastUpdated: document.querySelector("[data-last-updated]"),
@@ -45,6 +47,7 @@ const els = {
   stats: document.querySelector("[data-stats]"),
   googleUrl: document.querySelector("[data-google-url]"),
   rosterUrl: document.querySelector("[data-roster-url]"),
+  storageUrl: document.querySelector("[data-storage-url]"),
   csvFile: document.querySelector("[data-csv-file]"),
   search: document.querySelector("[data-search]"),
   statusFilter: document.querySelector("[data-status-filter]"),
@@ -88,8 +91,9 @@ function loadState() {
   }
 }
 
-function saveState() {
+function saveState(options = {}) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (options.cloud !== false) schedulePersonalCloudSave();
 }
 
 function escapeHtml(value) {
@@ -117,7 +121,8 @@ function cellText(cell = {}) {
 function normalizeSettings(raw = {}) {
   return {
     myCallsign: normalizeCallsign(raw.myCallsign || DEFAULT_MY_CALLSIGN),
-    googleEmail: String(raw.googleEmail || "").trim()
+    googleEmail: String(raw.googleEmail || "").trim(),
+    storageUrl: String(raw.storageUrl || DEFAULT_STORAGE_URL).trim()
   };
 }
 
@@ -252,7 +257,11 @@ function normalizeRaOffer(raw = {}) {
 function normalizePingOffer(raw = {}) {
   return {
     id: raw.id || crypto.randomUUID(),
-    createdAt: raw.createdAt || ""
+    createdAt: raw.createdAt || "",
+    cadetId: raw.cadetId || "",
+    cadetName: raw.cadetName || "",
+    callsign: raw.callsign || "",
+    discordId: raw.discordId || ""
   };
 }
 
@@ -495,6 +504,24 @@ async function fetchSheetJson(url, options = {}) {
   return response.json();
 }
 
+async function sendSheetJson(url, options = {}) {
+  const token = await ensureGoogleAccessToken(options);
+  const response = await fetch(url, {
+    method: options.method || "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json"
+    },
+    body: options.body ? JSON.stringify(options.body) : undefined
+  });
+  if (response.status === 401 || response.status === 403) {
+    googleAccessToken = "";
+    throw new Error("Your Google account does not have permission to save to the storage sheet.");
+  }
+  if (!response.ok) throw new Error(`Google Sheets returned ${response.status}.`);
+  return response.json();
+}
+
 async function sheetTitleFromInfo(id, gid, options = {}) {
   const metadata = await fetchSheetJson(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(id)}?fields=sheets.properties(sheetId,title)`, options);
   const sheet = (metadata.sheets || []).find((entry) => String(entry.properties?.sheetId) === String(gid)) || metadata.sheets?.[0];
@@ -516,6 +543,154 @@ function findSheetTitle(sheets = [], gid) {
 
 function sheetRange(title, range = "A1:Z220") {
   return `'${String(title).replace(/'/g, "''")}'!${range}`;
+}
+
+function storageSheetInfo() {
+  return sheetInfoFromUrl(state.settings?.storageUrl || DEFAULT_STORAGE_URL);
+}
+
+function rowsFromObjects(headers, rows) {
+  return [
+    headers,
+    ...rows.map((row) => headers.map((header) => row[header] ?? ""))
+  ];
+}
+
+function objectsFromRows(values = []) {
+  const headers = (values[0] || []).map((header) => String(header || "").trim());
+  return values.slice(1)
+    .filter((row) => row.some((value) => String(value || "").trim()))
+    .map((row) => Object.fromEntries(headers.map((header, index) => [header, row[index] || ""])));
+}
+
+async function ensureStorageTabs(spreadsheetId, options = {}) {
+  const required = ["Settings", "RA Offers", "Ping Offers", "Notes"];
+  const metadata = await sheetMetadata(spreadsheetId, options);
+  const existing = new Set((metadata.sheets || []).map((sheet) => sheet.properties?.title).filter(Boolean));
+  const missing = required.filter((title) => !existing.has(title));
+  if (!missing.length) return;
+  await sendSheetJson(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}:batchUpdate`, {
+    ...options,
+    body: {
+      requests: missing.map((title) => ({ addSheet: { properties: { title } } }))
+    }
+  });
+}
+
+async function readStorageTab(spreadsheetId, title, options = {}) {
+  const range = encodeURIComponent(sheetRange(title, "A1:Z1000"));
+  const data = await fetchSheetJson(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values/${range}?majorDimension=ROWS`, options);
+  return data.values || [];
+}
+
+async function writeStorageTab(spreadsheetId, title, values, options = {}) {
+  const clearRange = encodeURIComponent(sheetRange(title, "A:Z"));
+  await sendSheetJson(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values/${clearRange}:clear`, {
+    ...options,
+    body: {}
+  });
+  const updateRange = encodeURIComponent(sheetRange(title, "A1"));
+  await sendSheetJson(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values/${updateRange}?valueInputOption=RAW`, {
+    ...options,
+    method: "PUT",
+    body: { values }
+  });
+}
+
+function personalStorageRows() {
+  const individualOffers = state.cadets.flatMap((cadet) => (cadet.raOffers || []).map((offer) => ({
+    id: offer.id,
+    cadetId: cadet.id,
+    cadetName: cadet.name || "",
+    callsign: cadet.callsign || "",
+    discordId: cadet.discordId || "",
+    createdAt: offer.createdAt || ""
+  })));
+  return {
+    settings: [
+      ["Key", "Value"],
+      ["myCallsign", state.settings?.myCallsign || DEFAULT_MY_CALLSIGN],
+      ["googleEmail", state.settings?.googleEmail || ""],
+      ["storageUrl", state.settings?.storageUrl || DEFAULT_STORAGE_URL]
+    ],
+    raOffers: rowsFromObjects(["id", "cadetId", "cadetName", "callsign", "discordId", "createdAt"], individualOffers),
+    pingOffers: rowsFromObjects(["id", "createdAt", "cadetId", "cadetName", "callsign", "discordId"], state.pingOffers || []),
+    notes: rowsFromObjects(["id", "cadetId", "cadetName", "note", "createdAt"], state.notes || [])
+  };
+}
+
+function applyStorageSettings(values = []) {
+  const settings = Object.fromEntries(values.slice(1).map((row) => [row[0], row[1] || ""]));
+  state.settings = normalizeSettings({
+    ...state.settings,
+    myCallsign: settings.myCallsign || state.settings?.myCallsign,
+    googleEmail: settings.googleEmail || state.settings?.googleEmail,
+    storageUrl: settings.storageUrl || state.settings?.storageUrl
+  });
+}
+
+function findCadetForStorageOffer(offer = {}) {
+  const call = normalizeCallsign(offer.callsign);
+  const name = normalizeKey(offer.cadetName);
+  return state.cadets.find((cadet) => offer.cadetId && cadet.id === offer.cadetId)
+    || state.cadets.find((cadet) => call && normalizeCallsign(cadet.callsign) === call)
+    || state.cadets.find((cadet) => name && normalizeKey(cadet.name) === name)
+    || null;
+}
+
+function applyStorageRaOffers(values = []) {
+  const byCadet = new Map();
+  for (const row of objectsFromRows(values)) {
+    const offer = normalizeRaOffer(row);
+    if (!offer.createdAt) continue;
+    const cadet = findCadetForStorageOffer(row);
+    if (!cadet) continue;
+    const list = byCadet.get(cadet.id) || [];
+    list.push(offer);
+    byCadet.set(cadet.id, list);
+  }
+  state.cadets = state.cadets.map((cadet) => ({
+    ...cadet,
+    raOffers: byCadet.has(cadet.id) ? byCadet.get(cadet.id) : cadet.raOffers || []
+  }));
+}
+
+function applyStorageRows(data = {}) {
+  applyStorageSettings(data.settings || []);
+  state.pingOffers = objectsFromRows(data.pingOffers || []).map(normalizePingOffer).filter((offer) => offer.createdAt);
+  state.notes = objectsFromRows(data.notes || []).map(normalizeNote).filter((note) => note.note || note.createdAt);
+  applyStorageRaOffers(data.raOffers || []);
+  saveState({ cloud: false });
+}
+
+async function loadPersonalCloudData(options = {}) {
+  const { id } = storageSheetInfo();
+  await ensureStorageTabs(id, options);
+  const [settings, raOffers, pingOffers, notes] = await Promise.all([
+    readStorageTab(id, "Settings", options),
+    readStorageTab(id, "RA Offers", options),
+    readStorageTab(id, "Ping Offers", options),
+    readStorageTab(id, "Notes", options)
+  ]);
+  applyStorageRows({ settings, raOffers, pingOffers, notes });
+}
+
+async function savePersonalCloudData(options = {}) {
+  const { id } = storageSheetInfo();
+  await ensureStorageTabs(id, options);
+  const rows = personalStorageRows();
+  await writeStorageTab(id, "Settings", rows.settings, options);
+  await writeStorageTab(id, "RA Offers", rows.raOffers, options);
+  await writeStorageTab(id, "Ping Offers", rows.pingOffers, options);
+  await writeStorageTab(id, "Notes", rows.notes, options);
+}
+
+function schedulePersonalCloudSave() {
+  if (!googleAccessToken || !state.settings?.storageUrl) return;
+  window.clearTimeout(cloudSaveTimer);
+  cloudSaveTimer = window.setTimeout(() => {
+    savePersonalCloudData({ prompt: "" }).catch((error) => console.warn("Personal dashboard cloud save failed:", error));
+  }, 900);
 }
 
 async function applyMyRaFromCadetTabs(spreadsheetId, sheets = [], options = {}) {
@@ -928,6 +1103,12 @@ async function importGoogleSheet(options = {}) {
   } catch (rosterError) {
     errors.push(`Roster sheet: ${rosterError.message}`);
   }
+  try {
+    await loadPersonalCloudData(tokenOptions);
+  } catch (storageError) {
+    errors.push(`Personal storage sheet: ${storageError.message}`);
+  }
+  render();
   if (silent) return { cadetCount, rosterCount, errors };
   if (errors.length) {
     alert(`Synced with issues.\n\nImported ${cadetCount} cadet row(s) and ${rosterCount} roster row(s).\n\n${errors.join("\n")}`);
@@ -1205,9 +1386,10 @@ function renderNotes() {
 function renderSettings() {
   if (els.myCallsign) els.myCallsign.value = state.settings?.myCallsign || DEFAULT_MY_CALLSIGN;
   if (els.googleEmail) els.googleEmail.value = state.settings?.googleEmail || "";
+  if (els.storageUrl) els.storageUrl.value = state.settings?.storageUrl || DEFAULT_STORAGE_URL;
   if (els.settingsSummary) {
     const email = state.settings?.googleEmail ? ` Google will prefer ${state.settings.googleEmail}.` : " Add your Gmail here so Google can choose the right account.";
-    els.settingsSummary.textContent = `Current RA callsign check: ${state.settings?.myCallsign || DEFAULT_MY_CALLSIGN}.${email}`;
+    els.settingsSummary.textContent = `Current RA callsign check: ${state.settings?.myCallsign || DEFAULT_MY_CALLSIGN}.${email} Personal data sync uses your storage sheet.`;
   }
 }
 
@@ -1377,10 +1559,10 @@ function raOfferEvents() {
   const pings = (state.pingOffers || []).map((offer) => ({
     id: offer.id,
     type: "Ping",
-    cadetId: "",
-    cadetName: "All cadets",
-    callsign: "",
-    discordId: "",
+    cadetId: offer.cadetId || "",
+    cadetName: offer.cadetName || "All cadets",
+    callsign: offer.callsign || "",
+    discordId: offer.discordId || "",
     createdAt: offer.createdAt
   }));
   return [...individual, ...pings].filter((offer) => offer.createdAt);
@@ -1413,7 +1595,7 @@ function renderRaOffers() {
     .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
   const individualCount = filtered.filter((event) => event.type === "Individual").length;
   const pingCount = filtered.filter((event) => event.type === "Ping").length;
-  const cadetCount = new Set(filtered.filter((event) => event.type === "Individual").map((event) => event.cadetId)).size;
+  const cadetCount = new Set(filtered.filter((event) => event.cadetId).map((event) => event.cadetId)).size;
   els.raOfferSummary.innerHTML = `
     <span><strong>${filtered.length}</strong> total</span>
     <span><strong>${individualCount}</strong> individual</span>
@@ -1426,7 +1608,7 @@ function renderRaOffers() {
       <strong>${escapeHtml(event.cadetName)}</strong>
       <span class="muted">${escapeHtml([event.callsign, event.discordId].filter(Boolean).join(" - "))}</span>
       <time>${escapeHtml(formatDateTime(event.createdAt))}</time>
-      ${event.type === "Ping" ? `<button data-delete-ping-offer="${escapeHtml(event.id)}" type="button">Delete</button>` : ""}
+      ${event.type === "Ping" ? `<button data-link-ping-cadet="${escapeHtml(event.id)}" type="button">${event.cadetId ? "Change cadet" : "Add cadet"}</button><button data-delete-ping-offer="${escapeHtml(event.id)}" type="button">Delete</button>` : ""}
     </div>
   `).join("") : empty("No RA offers logged for this month.");
 }
@@ -1513,13 +1695,53 @@ function saveDialog() {
 function saveSettings() {
   state.settings = normalizeSettings({
     myCallsign: els.myCallsign?.value || DEFAULT_MY_CALLSIGN,
-    googleEmail: els.googleEmail?.value || ""
+    googleEmail: els.googleEmail?.value || "",
+    storageUrl: els.storageUrl?.value || DEFAULT_STORAGE_URL
   });
   googleAccessToken = "";
   googleTokenClient = null;
   saveState();
   render();
   alert(`Settings saved. Your RA callsign is ${state.settings.myCallsign}. Sync the sheet again to refresh Needs RA From Me.`);
+}
+
+function findCadetBySearch(value = "") {
+  const query = String(value || "").trim().toLowerCase();
+  if (!query) return null;
+  return state.cadets.find((cadet) => [
+    cadet.name,
+    cadet.callsign,
+    cadet.discordId,
+    cadet.employeeNumber
+  ].some((field) => String(field || "").toLowerCase() === query))
+    || state.cadets.find((cadet) => [
+      cadet.name,
+      cadet.callsign,
+      cadet.discordId,
+      cadet.employeeNumber
+    ].some((field) => String(field || "").toLowerCase().includes(query)));
+}
+
+function linkPingOfferToCadet(offerId) {
+  const ping = (state.pingOffers || []).find((offer) => offer.id === offerId);
+  if (!ping) return;
+  const search = prompt("Which cadet responded? Type their name, callsign, Discord, or employee number:");
+  if (!search) return;
+  const cadet = findCadetBySearch(search);
+  if (!cadet) return alert("I could not find that cadet. Try their exact callsign or name after syncing the sheet.");
+  const linkedOfferId = `ping-${offerId}`;
+  state.cadets.forEach((entry) => {
+    entry.raOffers = (entry.raOffers || []).filter((offer) => offer.id !== linkedOfferId);
+  });
+  Object.assign(ping, {
+    cadetId: cadet.id,
+    cadetName: cadet.name || "",
+    callsign: cadet.callsign || "",
+    discordId: cadet.discordId || ""
+  });
+  cadet.raOffers = [...(cadet.raOffers || []), normalizeRaOffer({ id: linkedOfferId, createdAt: ping.createdAt || new Date().toISOString() })];
+  saveState();
+  render();
 }
 
 function csvEscape(value) {
@@ -1562,13 +1784,32 @@ document.addEventListener("click", async (event) => {
       } catch {
         await ensureGoogleAccessToken({ prompt: "consent" });
       }
-      alert("Google sign-in connected. You can now sync the sheet.");
+      await loadPersonalCloudData({ prompt: "" });
+      render();
+      alert("Google sign-in connected. Your personal dashboard data has been loaded.");
     } catch (error) {
       alert(error.message);
     }
   }
   if (action === "import-google") importGoogleSheet();
   if (action === "save-settings") saveSettings();
+  if (action === "load-cloud") {
+    try {
+      await loadPersonalCloudData({ prompt: "" });
+      render();
+      alert("Loaded your personal dashboard data from Google Sheets.");
+    } catch (error) {
+      alert(error.message);
+    }
+  }
+  if (action === "save-cloud") {
+    try {
+      await savePersonalCloudData({ prompt: "" });
+      alert("Saved your personal dashboard data to Google Sheets.");
+    } catch (error) {
+      alert(error.message);
+    }
+  }
   if (action === "import-file") {
     const file = els.csvFile?.files?.[0];
     if (!file) return alert("Choose a CSV file first.");
@@ -1617,10 +1858,17 @@ document.addEventListener("click", async (event) => {
 
   const deletePingOffer = event.target.closest("[data-delete-ping-offer]");
   if (deletePingOffer) {
+    const linkedOfferId = `ping-${deletePingOffer.dataset.deletePingOffer}`;
     state.pingOffers = (state.pingOffers || []).filter((offer) => offer.id !== deletePingOffer.dataset.deletePingOffer);
+    state.cadets.forEach((cadet) => {
+      cadet.raOffers = (cadet.raOffers || []).filter((offer) => offer.id !== linkedOfferId);
+    });
     saveState();
     render();
   }
+
+  const linkPingCadet = event.target.closest("[data-link-ping-cadet]");
+  if (linkPingCadet) linkPingOfferToCadet(linkPingCadet.dataset.linkPingCadet);
 
   const editCadet = event.target.closest("[data-edit-cadet]");
   if (editCadet) openCadetForm(state.cadets.find((cadet) => cadet.id === editCadet.dataset.editCadet));
